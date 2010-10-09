@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>OpenKeyVal.org</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 1em auto;
+        width: 600px;
+      }
+      pre {
+        padding:1em;
+        background: #d1e2ea;
+        border:1px dashed #0099e8;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>OpenKeyVal.org</h1>
+    <p>OpenKeyVal.org is a completely open key-value data store, exposed as a drop-dead simple web service. The goal is to make this a very easy way to persist data in web applications.</p>
+    
+    <hr />
+    
+    <h2>The API</h2>
+    <p>Store data by POSTing form data to http://openkeyval.org/some-arbitrary-key. The value posted as 'data' will be saved to some-arbitrary key. Returns the text 'ok' and an 200 status code on success.</p>    
+    <p>Delete data by posting an empty string as 'data' to the same address. Returns a 200 status code and either 'removed' or 'not-found', depending on whether the value existed.</p>
+    <p>Fetch data by GETting http://openkeyval.org/some-arbitrary-key. Returns the data with a 200 status code on success, or a 404 if not found.</p>
+    <!--<p>To fetch that data using JSONP with the callback funcName() rather than its return value: http://openkeyval.org/some-arbitrary-key.callback:funcName</p>-->
+    <p>To fetch that data and serve it with an arbitrary MIME type: http://openkeyval.org/some-arbitrary-key.image/png
+    
+    <h2>Valid keys</h2>
+    <p>Keys can contain upper and lowercase characters, dashes, and underscores and must be at least 5 characters long.</p>
+    
+    <h2>Valid data</h2>
+    <p>Data is completely freeform and is binary safe. Data size is currently limited to 64 KiB.</p>
+
+    <h2>Examples</h2>
+    <h3>Curl</h3>
+
+    <h4>Post</h4>
+    <pre>$ curl -d "data=Meat+Dress" http://openkeyval.org/Attire</pre>
+
+    <h4>Get</h4>
+    <pre>$ curl http://openkeyval.org/Attire</pre>
+
+
+    <hr />
+    
+    <p><a href="http://shinyplasticbag.posterous.com/openkeyvalorg">See the original blog entry</a></p>
+  </body>
+</html>
