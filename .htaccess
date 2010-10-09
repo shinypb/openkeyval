@@ -1,0 +1,2 @@
+RewriteEngine On
+RewriteRule ^(.+)$ server.php?key=$1 [QSA,L]
