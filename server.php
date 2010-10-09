@@ -1,7 +1,7 @@
 <?php
   
   class OpenKeyval {    
-    const kMaxDataSize = 65535;
+    const kMaxDataSize = 65536;
     
     public static function Dispatch() {
       if($_SERVER['REQUEST_METHOD'] == 'GET' && $_SERVER['REQUEST_URI'] == '/') {
@@ -18,7 +18,7 @@
         foreach ($_POST as $key=>$value) {
           self::HandlePOST($key,$value);
         }
-        self::Response(200, array('status' => 'multiset', 'keys' => join(',',array_keys($_POST))));
+        self::Response(200, array('status' => 'multiset', 'keys' => array_keys($_POST)));
       }
 
       $_SERVER['REQUEST_URI'] = substr($_SERVER['REQUEST_URI'], 1);
