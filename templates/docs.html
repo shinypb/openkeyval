@@ -108,10 +108,6 @@
       We'll respond with a JSON object. If everything goes well, we'll return 'multiset' as the
       <code>status</code> and an array of keys that were saved as <code>keys</code>.</p>
       
-      <h2>Open Source</h2>
-      <p>The source code for OpenKeyval is <a href="http://github.com/shinyplasticbag/openkeyval">available on github</a>.
-      Contributions are welcome.</p>
-      
       <p>Store data by POSTing form data to http://OpenKeyval/some-arbitrary-key. The value posted as 'data' will be saved to some-arbitrary key. Returns the text 'ok' and an 200 status code on success.</p>    
       <p>Delete data by posting an empty string as 'data' to the same address. Returns a 200 status code and either 'removed' or 'not-found', depending on whether the value existed.</p>
       <p>Fetch data by GETting http://OpenKeyval/some-arbitrary-key. Returns the data with a 200 status code on success, or a 404 if not found.</p>
@@ -140,6 +136,26 @@
       <h3>Serving a file</h3>
       <p>OpenKeyval lets you serve back data with an arbitrary MIME type (the default is <code>text/plain</code>):
       <pre>$ curl http://openkeyval.org/location.application/octet-stream</pre>
+
+      <h2>Examples using HTML</h2>
+      <h3>Sending some data via POST</h3>
+      <pre>&lt;form method="POST" action="http://openkeyval.org/pianist"&gt;
+&lt;input type="text" name="data" value="Freddie Mercury"&gt;
+&lt;input type="submit"&gt;
+&lt;/form&gt;</pre>
+      <p>or, multiple keys:</p>
+      <pre>&lt;form method="POST" action="http://openkeyval.org/"&gt;
+&lt;input type="text" name="location" value="California"&gt;
+&lt;input type="text" name="username" value="Brian"&gt;
+&lt;input type="submit"&gt;
+&lt;/form&gt;</pre>
+
+      <h2>Open Source</h2>
+      <p>The source code for OpenKeyval is <a href="http://github.com/shinyplasticbag/openkeyval">available on github</a>.
+      Contributions are welcome.</p>
+      
+
+
     </div>
     
     <div id="footer">
