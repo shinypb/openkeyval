@@ -21,26 +21,36 @@
         self::Response(200, array('status' => 'multiset', 'keys' => array_keys($_POST)));
       }
 
-      $_SERVER['REQUEST_URI'] = substr($_SERVER['REQUEST_URI'], 1);
-      if(strpos($_SERVER['REQUEST_URI'], '.')) {
-        list($key, $command) = explode('.', $_SERVER['REQUEST_URI']);
+      if(strpos($_REQUEST['key'], '.')) {
+        list($key, $command) = explode('.', $_REQUEST['key']);
       } else {
-        $key = $_SERVER['REQUEST_URI'];
+        $key = $_REQUEST['key'];
         $command = '';
       }
-      
+
       if(!self::IsValidKey($key)) {
         self::Response(400, array('error' => 'invalid_key'));
       }
       
       if($_SERVER['REQUEST_METHOD'] == 'GET') {
         self::HandleGET($key, $command);
+      } elseif ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+        self::HandleOPTIONS();
       } else {
         self::HandlePOST($key, $_POST['data']);
         self::Response(200, array('status' => 'set', 'key' => $key));
       }
     }
     
+    private function determineJSONPCallback() {
+      foreach (array("jsonp_callback","callback") as $k) {
+        if (isset($_GET[$k])) {
+          $jsonp = $k;
+        }
+      }
+      return $jsonp;
+    }
+
     public static function HandleGET($key, $command) {
       if($value = OpenKeyval_Storage_Cached::Get($key)) {
         if(strpos($command, '/')) {
@@ -54,7 +64,12 @@
       
       self::Response(404, array('error' => 'not_found'));
     }
-    
+
+    public static function HandleOPTIONS() {
+      header("HTTP/1.1 200 OK");
+      header("Allow: OPTIONS,GET,POST");
+    }
+
     public static function HandlePOST($key, $value) {
       if(!isset($value)) {
         self::Response(400, array('error' => 'missing_field', 'message' => "Data must be sent as form data in the field 'data'"));
@@ -90,6 +105,12 @@
     }
     
     public static function Response($http_code, $body, $content_type = null) {
+      $jsonp = self::determineJSONPCallback();
+      if (isset($jsonp)) {
+        $content_type = "text/javascript";
+        $command = "";
+        $body = $_GET[$jsonp] . '(' . json_encode($body) . ');';
+      } 
       $http_status_messages = array(
         200 => 'OK',
         400 => 'Bad Request',

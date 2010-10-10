@@ -150,6 +150,27 @@
 &lt;input type="submit"&gt;
 &lt;/form&gt;</pre>
 
+      <h2>Examples using jQuery and JSONP</h2>
+      <h3>Getting a value via AJAX</h3>
+      <pre>$.ajax({
+  url: "http://openkeyval.org/location",
+  dataType: "jsonp",
+  success: function(data){
+    alert(data);
+  }
+});</pre>
+
+      <h3>Setting values via AJAX</h3>
+      <pre>$.ajax({
+  type: "POST",
+  url: "http://openkeyval.org/",
+  data: "name=John&location=Boston",
+  dataType: "jsonp",
+  success: function(data){
+    alert("Saved "+data);
+  }
+});</pre>
+
       <h2>Open Source</h2>
       <p>The source code for OpenKeyval is <a href="http://github.com/shinyplasticbag/openkeyval">available on github</a>.
       Contributions are welcome.</p>
