@@ -1,2 +1,3 @@
 RewriteEngine On
-RewriteRule ^(.+)$ server.php?key=$1 [QSA,L]
+RewriteRule ^statics/(.*)$ statics/$1 [L]
+RewriteRule ^(.*)$ server.php?key=$1 [QSA,L]
