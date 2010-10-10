@@ -5,7 +5,7 @@
     
     public static function Dispatch() {
       if($_SERVER['REQUEST_METHOD'] == 'GET' && $_SERVER['REQUEST_URI'] == '/') {
-        require_once 'docs.html';
+        require_once 'templates/docs.html';
         exit;
       }
 
