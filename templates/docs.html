@@ -108,11 +108,11 @@
       We'll respond with a JSON object. If everything goes well, we'll return 'multiset' as the
       <code>status</code> and an array of keys that were saved as <code>keys</code>.</p>
       
-      <p>Store data by POSTing form data to http://OpenKeyval/some-arbitrary-key. The value posted as 'data' will be saved to some-arbitrary key. Returns the text 'ok' and an 200 status code on success.</p>    
+      <p>Store data by POSTing form data to http://openkeyval.org/some-arbitrary-key. The value posted as 'data' will be saved to some-arbitrary key. Returns the text 'ok' and an 200 status code on success.</p>    
       <p>Delete data by posting an empty string as 'data' to the same address. Returns a 200 status code and either 'removed' or 'not-found', depending on whether the value existed.</p>
-      <p>Fetch data by GETting http://OpenKeyval/some-arbitrary-key. Returns the data with a 200 status code on success, or a 404 if not found.</p>
-      <!--<p>To fetch that data using JSONP with the callback funcName() rather than its return value: http://OpenKeyval/some-arbitrary-key.callback:funcName</p>-->
-      <p>To fetch that data and serve it with an arbitrary MIME type: http://OpenKeyval/some-arbitrary-key.image/png
+      <p>Fetch data by GETting http://openkeyval.org/some-arbitrary-key. Returns the data with a 200 status code on success, or a 404 if not found.</p>
+      <!--<p>To fetch that data using JSONP with the callback funcName() rather than its return value: http://openkeyval.org/some-arbitrary-key.callback:funcName</p>-->
+      <p>To fetch that data and serve it with an arbitrary MIME type: http://openkeyval.org/some-arbitrary-key.image/png
       
       <h2>Valid keys</h2>
       <p>Keys are case-sensitive, and can contain upper and lowercase characters, dashes, and underscores and must be between 5 and 128 characters long.</p>
@@ -161,10 +161,10 @@
 });</pre>
 
       <h3>Setting values via AJAX</h3>
+      <p>The JSONP store module uses a special URI called <code>http://openkeyval.org/store/</code>.</p>
       <pre>$.ajax({
-  type: "POST",
-  url: "http://openkeyval.org/",
-  data: "name=John&location=Boston",
+  url: "http://openkeyval.org/store/",
+  data: "username=John&location=Boston",
   dataType: "jsonp",
   success: function(data){
     alert("Saved "+data);

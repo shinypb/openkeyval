@@ -28,14 +28,20 @@
         $command = '';
       }
 
+      if (strpos($_SERVER['REQUEST_URI'],'/store/')===0) {
+        self::HandleBastardSonOfAProtocolJSONP();
+      }
+
+      if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+        self::HandleOPTIONS();
+      }
+
       if(!self::IsValidKey($key)) {
         self::Response(400, array('error' => 'invalid_key'));
       }
-      
+     
       if($_SERVER['REQUEST_METHOD'] == 'GET') {
         self::HandleGET($key, $command);
-      } elseif ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
-        self::HandleOPTIONS();
       } else {
         self::HandlePOST($key, $_POST['data']);
         self::Response(200, array('status' => 'set', 'key' => $key));
@@ -49,6 +55,19 @@
         }
       }
       return $jsonp;
+    }
+
+
+    public static function HandleBastardSonOfAProtocolJSONP() {
+      $set = array();
+      // Pretend GET params were each a POST
+      foreach ($_GET as $key=>$value) {
+        if ($key != self::determineJSONPCallback()) {
+          self::HandlePOST($key,$value);
+          $set[] = $key;
+        }
+      }
+      self::Response(200, array('status' => 'multiset', 'keys' => $set));
     }
 
     public static function HandleGET($key, $command) {
@@ -66,8 +85,9 @@
     }
 
     public static function HandleOPTIONS() {
-      header("HTTP/1.1 200 OK");
+      header("HTTP/1.0 200 OK");
       header("Allow: OPTIONS,GET,POST");
+      exit;
     }
 
     public static function HandlePOST($key, $value) {
