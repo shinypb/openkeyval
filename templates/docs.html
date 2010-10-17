@@ -96,6 +96,8 @@
       relatively private by giving your keys a distinct prefix. Think of it as a sort of
       password -- instead of saving information at, say, "mydata", save it at "ac75487cc-mydata"
       or something else equally obscure.</p>
+      <p>You can also provide read-only access to your data by using the read-only key
+      that is returned with each value that you save.</p>
       
       <h2>What's the catch?</h2>
       <p>There is no catch. There's no sign up, no payment, no hassles. The only limitation
@@ -106,7 +108,12 @@
       
       <p>Store data by <code>POST</code>ing key-value pairs as form data to http://openkeyval.org/.
       We'll respond with a JSON object. If everything goes well, we'll return 'multiset' as the
-      <code>status</code> and an array of keys that were saved as <code>keys</code>.</p>
+      <code>status</code> and an an associative array of keys that were saved as <code>keys</code>.
+      In the <code>keys</code> array, each key you write maps to a read-only version of that key. You
+      can use the either the original key or the read-only version to access the data. The read-only
+      key can be used to give someone access to data without worrying about them modifying it -- it's
+      not possible to figure out what the original key was based on the read-only version.
+      </p>
       
       <p>Store data by POSTing form data to http://openkeyval.org/some-arbitrary-key. The value posted as 'data' will be saved to some-arbitrary key. Returns the text 'ok' and an 200 status code on success.</p>    
       <p>Delete data by posting an empty string as 'data' to the same address. Returns a 200 status code and either 'removed' or 'not-found', depending on whether the value existed.</p>
@@ -164,7 +171,7 @@
       <p>The JSONP store module uses a special URI called <code>http://openkeyval.org/store/</code>.</p>
       <pre>$.ajax({
   url: "http://openkeyval.org/store/",
-  data: "username=John&location=Boston",
+  data: "username=Mark&location=California",
   dataType: "jsonp",
   success: function(data){
     alert("Saved "+data);

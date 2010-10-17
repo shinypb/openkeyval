@@ -1,0 +1,10 @@
+OpenKeyval
+==========
+
+Setting it up
+-------------
+- Make sure you're serving the openkeyval directory from the root of your server.
+- Your server supports .htaccess and is following the RewriteRules
+- Invent your own salt to use when hashing values and put it into a file called salt.txt, in the same directory as the source code. 
+
+More of a README to come later...

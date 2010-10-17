@@ -2,6 +2,7 @@
   
   class OpenKeyval {    
     const kMaxDataSize = 65536;
+    const kReadOnlyKeyPrefix = 'rok-';
     
     public static function Dispatch() {
       if($_SERVER['REQUEST_METHOD'] == 'GET' && $_SERVER['REQUEST_URI'] == '/') {
@@ -15,12 +16,21 @@
             self::Response(400, array('error' => 'invalid_key', 'key' => $key));
           }
         }
+        
+        $key_map = array();
         foreach ($_POST as $key=>$value) {
           self::HandlePOST($key,$value);
+          $key_map[$key] = self::ReadOnlyKey($key);
         }
-        self::Response(200, array('status' => 'multiset', 'keys' => array_keys($_POST)));
+        self::Response(200, array('status' => 'multiset', 'keys' => $key_map));
       }
-
+      
+      if($_REQUEST['key'] == 'store/') {
+        unset($_REQUEST['key']);
+        unset($_GET['key']);
+        unset($_POST['key']);
+      }
+      
       if(strpos($_REQUEST['key'], '.')) {
         list($key, $command) = explode('.', $_REQUEST['key']);
       } else {
@@ -44,7 +54,7 @@
         self::HandleGET($key, $command);
       } else {
         self::HandlePOST($key, $_POST['data']);
-        self::Response(200, array('status' => 'set', 'key' => $key));
+        self::Response(200, array('status' => 'set', 'key' => $key, 'read_only_key' => self::ReadOnlyKey($key)));
       }
     }
     
@@ -61,13 +71,14 @@
     public static function HandleBastardSonOfAProtocolJSONP() {
       $set = array();
       // Pretend GET params were each a POST
+      $key_map = array();
       foreach ($_GET as $key=>$value) {
         if ($key != self::determineJSONPCallback()) {
-          self::HandlePOST($key,$value);
-          $set[] = $key;
+          self::HandlePOST($key, $value);
+          $key_map[$key] = self::ReadOnlyKey($key);
         }
       }
-      self::Response(200, array('status' => 'multiset', 'keys' => $set));
+      self::Response(200, array('status' => 'multiset', 'keys' => $key_map));
     }
 
     public static function HandleGET($key, $command) {
@@ -120,7 +131,14 @@
       }
     }
     
+    public static function IsReadOnlyKey($key) {
+      return (strpos($key, OpenKeyval::kReadOnlyKeyPrefix) === 0);
+    }
+    
     public static function IsValidKey($key) {
+      if(self::IsReadOnlyKey($key)) {
+        $key = substr($key, strlen(self::kReadOnlyKeyPrefix));
+      }
       return !!preg_match('/^[-_a-z0-9]{5,128}$/i', $key);
     }
     
@@ -148,22 +166,48 @@
       echo $body;
       exit;
     }
+    
+    protected static function Salt() {
+      static $salt = null;
+      if(is_null($salt)) {
+        $filename = dirname(__FILE__) . '/salt.txt';
+        if(!file_exists($filename)) {
+          die("Missing salt file (salt.txt in the same directory as this script).");
+        }
+        $salt = trim(file_get_contents($filename));
+      }
+      return $salt;
+    }
+    
+    public static function HashForKey($key) {
+      return sha1(self::Salt() . $key);
+    }
+    
+    public static function ReadOnlyKey($key) {
+      return OpenKeyval::kReadOnlyKeyPrefix . self::HashForKey($key);
+    }
   }
   
   class OpenKeyval_Storage {    
-    protected function PathForKey($key) {
-      $hash = sha1($key);
-      $dirname = 'data/' . substr($hash, 0, 2);
-      $filename = substr($hash, 2);
+    protected function PathForHash($hash) {
+      $dirname = 'data/' . substr($hash, 0, 2) . '/'  . substr($hash, 2, 2) . '/'  . substr($hash, 4, 2) . '/'  . substr($hash, 6, 2);
+      
       if(!file_exists($dirname)) {
-        mkdir($dirname);
+        mkdir($dirname, 0777, $recursive = true);
       }
-      return $dirname . '/' . $filename;
+      
+      return $dirname . '/' . $hash;
     }
     
     
     public static function Delete($key) {
-      $path = self::PathForKey($key);
+      if(self::IsReadOnlyKey($key)) {
+        //  Can't delete with a read-only key
+        return false;
+      }
+      
+      $hash = OpenKeyval::HashForKey($key);
+      $path = self::PathForHash($hash);
       if(!file_exists($path)) {
         return null;
       }
@@ -171,7 +215,13 @@
     }
     
     public static function Get($key) {
-      $path = self::PathForKey($key);
+      if(OpenKeyval::IsReadOnlyKey($key)) {
+        $key = substr($key, strlen(OpenKeyval::kReadOnlyKeyPrefix));
+        $path = self::PathForHash($key);
+      } else {
+        $hash = OpenKeyval::HashForKey($key);
+        $path = self::PathForHash($key);
+      }
       if(!file_exists($path)) {
         return null;
       }
@@ -179,7 +229,15 @@
     }
     
     public static function Set($key, $value) {
-      return file_put_contents(self::PathForKey($key), $value, LOCK_EX);
+      if(OpenKeyval::IsReadOnlyKey($key)) {
+        //  Can't write to a read-only key
+        return false;
+      }
+      
+      $hash = OpenKeyval::HashForKey($key);
+      $path = self::PathForHash($hash);
+      
+      return file_put_contents($path, $value, LOCK_EX);
     }
   }
   
@@ -210,7 +268,7 @@
       }
       
       $value = self::GetHandle()->get($key);
-      if($value === false) {
+      if($value === null) {
         //  not in cache
         $value = parent::Get($key);
         self::GetHandle()->set($key, $value);
