@@ -201,7 +201,7 @@
     
     
     public static function Delete($key) {
-      if(self::IsReadOnlyKey($key)) {
+      if(OpenKeyval::IsReadOnlyKey($key)) {
         //  Can't delete with a read-only key
         return false;
       }
