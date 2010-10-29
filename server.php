@@ -1,9 +1,9 @@
 <?php
-  
-  class OpenKeyval {    
+
+  class OpenKeyval {
     const kMaxDataSize = 65536;
     const kReadOnlyKeyPrefix = 'rok-';
-    
+
     public static function Dispatch() {
       if($_SERVER['REQUEST_METHOD'] == 'GET' && $_SERVER['REQUEST_URI'] == '/') {
         require_once 'templates/docs.html';
@@ -16,7 +16,7 @@
             self::Response(400, array('error' => 'invalid_key', 'key' => $key));
           }
         }
-        
+
         $key_map = array();
         foreach ($_POST as $key=>$value) {
           self::HandlePOST($key,$value);
@@ -24,13 +24,13 @@
         }
         self::Response(200, array('status' => 'multiset', 'keys' => $key_map));
       }
-      
+
       if($_REQUEST['key'] == 'store/') {
         unset($_REQUEST['key']);
         unset($_GET['key']);
         unset($_POST['key']);
       }
-      
+
       if(strpos($_REQUEST['key'], '.')) {
         list($key, $command) = explode('.', $_REQUEST['key']);
       } else {
@@ -49,7 +49,7 @@
       if(!self::IsValidKey($key)) {
         self::Response(400, array('error' => 'invalid_key'));
       }
-     
+
       if($_SERVER['REQUEST_METHOD'] == 'GET') {
         self::HandleGET($key, $command);
       } else {
@@ -57,7 +57,7 @@
         self::Response(200, array('status' => 'set', 'key' => $key, 'read_only_key' => self::ReadOnlyKey($key)));
       }
     }
-    
+
     private function determineJSONPCallback() {
       foreach (array("jsonp_callback","callback") as $k) {
         if (isset($_GET[$k])) {
@@ -91,7 +91,7 @@
         }
         self::Response(200, $value, $content_type);
       }
-      
+
       self::Response(404, array('error' => 'not_found'));
     }
 
@@ -106,12 +106,12 @@
         self::Response(400, array('error' => 'missing_field', 'message' => "Data must be sent as form data in the field 'data'"));
         return false;
       }
-     
+
       if(strlen($value) > self::kMaxDataSize) {
         self::Response(413, array('error' => 'data too big, max length is ' . self::kMaxDataSize . ' bytes'));
         return false;
       }
-      
+
       if(trim($value) == '') {
         if(OpenKeyval_Storage_Cached::Get($key)) {
           OpenKeyval_Storage_Cached::Delete($key);
@@ -122,7 +122,7 @@
           return false;
         }
       }
-      
+
       if(OpenKeyval_Storage_Cached::Set($key, $value)) {
         return true;
       } else {
@@ -130,25 +130,25 @@
         return false;
       }
     }
-    
+
     public static function IsReadOnlyKey($key) {
       return (strpos($key, OpenKeyval::kReadOnlyKeyPrefix) === 0);
     }
-    
+
     public static function IsValidKey($key) {
       if(self::IsReadOnlyKey($key)) {
         $key = substr($key, strlen(self::kReadOnlyKeyPrefix));
       }
       return !!preg_match('/^[-_a-z0-9]{5,128}$/i', $key);
     }
-    
+
     public static function Response($http_code, $body, $content_type = null) {
       $jsonp = self::determineJSONPCallback();
       if (isset($jsonp)) {
         $content_type = "text/javascript";
         $command = "";
         $body = $_GET[$jsonp] . '(' . json_encode($body) . ');';
-      } 
+      }
       $http_status_messages = array(
         200 => 'OK',
         400 => 'Bad Request',
@@ -166,7 +166,7 @@
       echo $body;
       exit;
     }
-    
+
     protected static function Salt() {
       static $salt = null;
       if(is_null($salt)) {
@@ -178,42 +178,42 @@
       }
       return $salt;
     }
-    
+
     public static function HashForKey($key) {
       return sha1(self::Salt() . $key);
     }
-    
+
     public static function ReadOnlyKey($key) {
       return OpenKeyval::kReadOnlyKeyPrefix . self::HashForKey($key);
     }
   }
-  
-  class OpenKeyval_Storage {    
+
+  class OpenKeyval_Storage {
     protected function PathForHash($hash) {
       $dirname = 'data/' . substr($hash, 0, 2) . '/'  . substr($hash, 2, 2) . '/'  . substr($hash, 4, 2) . '/'  . substr($hash, 6, 2);
-      
+
       if(!file_exists($dirname)) {
         mkdir($dirname, 0777, $recursive = true);
       }
-      
+
       return $dirname . '/' . $hash;
     }
-    
-    
+
+
     public static function Delete($key) {
       if(self::IsReadOnlyKey($key)) {
         //  Can't delete with a read-only key
         return false;
       }
-      
+
       $hash = OpenKeyval::HashForKey($key);
       $path = self::PathForHash($hash);
       if(!file_exists($path)) {
         return null;
       }
-      return unlink($path);      
+      return unlink($path);
     }
-    
+
     public static function Get($key) {
       if(OpenKeyval::IsReadOnlyKey($key)) {
         $key = substr($key, strlen(OpenKeyval::kReadOnlyKeyPrefix));
@@ -227,20 +227,20 @@
       }
       return file_get_contents($path);
     }
-    
+
     public static function Set($key, $value) {
       if(OpenKeyval::IsReadOnlyKey($key)) {
         //  Can't write to a read-only key
         return false;
       }
-      
+
       $hash = OpenKeyval::HashForKey($key);
       $path = self::PathForHash($hash);
-      
+
       return file_put_contents($path, $value, LOCK_EX);
     }
   }
-  
+
   class OpenKeyval_Storage_Cached extends OpenKeyval_Storage {
     protected static $handle;
     protected function GetHandle() {
@@ -250,41 +250,43 @@
       }
       return self::$handle;
     }
-    
+
     public static function Delete($key) {
       if(!self::GetHandle()) {
         //  Memcache down?
         return parent::Delete($key);
       }
-      
+
       self::GetHandle()->delete($key);
       return parent::Delete($key);
     }
-    
+
     public static function Get($key) {
       if(!self::GetHandle()) {
         //  Memcache down?
         return parent::Get($key);
       }
-      
-      $value = self::GetHandle()->get($key);
-      if($value === null) {
-        //  not in cache
-        $value = parent::Get($key);
-        self::GetHandle()->set($key, $value);
+
+      if($value = self::GetHandle()->get($key)) {
+        return unserialize($value);
       }
+
+      //  not in cache
+      $value = parent::Get($key);
+      self::GetHandle()->set($key, serialize($value));
+
       return $value;
     }
-    
+
     public static function Set($key, $value) {
       if(!self::GetHandle()) {
         //  Memcache down?
         return parent::Set($key);
       }
-      
+
       $rv = parent::Set($key, $value);
       if($rv) {
-        self::GetHandle()->set($key, $value);
+        self::GetHandle()->set($key, serialize($value));
       } else {
         //  weird, set failed
         self::GetHandle()->delete($key);
@@ -292,7 +294,7 @@
       return $rv;
     }
   }
-  
-  OpenKeyval::Dispatch();
-  
+
+OpenKeyval::Dispatch();
+
 ?>
