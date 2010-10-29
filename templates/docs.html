@@ -158,6 +158,8 @@
 &lt;/form&gt;</pre>
 
       <h2>Examples using jQuery and JSONP</h2>
+      <p>Because OpenKeyval support <a href="http://remysharp.com/2007/10/08/what-is-jsonp/">JSONP</a>, the normal cross-domain issue with AJAX does not apply.  Many JavaScript libraries (such as jQuery) automatically handle JSONP for you.</p>
+
       <h3>Getting a value via AJAX</h3>
       <pre>$.ajax({
   url: "http://api.openkeyval.org/location",
@@ -180,7 +182,18 @@
 
       <h2>Open Source</h2>
       <p>The source code for OpenKeyval is <a href="http://github.com/shinyplasticbag/openkeyval">available on github</a>.
-      Contributions are welcome.</p>
+      Contributions are welcome: go ahead and <a href="http://github.com/shinyplasticbag/openkeyval#fork_box">fork</a> the code, make some changes, and send a pull request.</p>
+
+      <h3>User Contibutions</h3>
+      <ul>
+        <li><a href="http://github.com/marcuse/pyopenkeyval">pyopenkeyval</a> - a Python interface presented as a dict-like object <i>(Marcus Ekelund)</i></li>
+        <li><a href="http://github.com/tomash/flyingv">FlyingV</a> - a Ruby gem for getting and setting values <i>(Tomash)</i></li>
+      </ul>
+
+      <h3>Bugs / Issues</h3>
+      <p>Please report bugs on the GitHub <a href="http://github.com/shinyplasticbag/openkeyval/issues">issue tracker</a>.
+
+
       
 
 
