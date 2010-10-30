@@ -59,6 +59,7 @@
     }
 
     private function determineJSONPCallback() {
+      $jsonp = null;
       foreach (array("jsonp_callback","callback") as $k) {
         if (isset($_GET[$k])) {
           $jsonp = $k;
