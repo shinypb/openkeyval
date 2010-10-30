@@ -5,6 +5,8 @@
     const kReadOnlyKeyPrefix = 'rok-';
 
     public static function Dispatch() {
+      self::fixMagicQuotesIfNeccessary();
+
       if($_SERVER['REQUEST_METHOD'] == 'GET' && $_SERVER['REQUEST_URI'] == '/') {
         require_once 'templates/docs.html';
         exit;
@@ -55,6 +57,17 @@
       } else {
         self::HandlePOST($key, $_POST['data']);
         self::Response(200, array('status' => 'set', 'key' => $key, 'read_only_key' => self::ReadOnlyKey($key)));
+      }
+    }
+
+    private function fixMagicQuotesIfNeccessary() {
+      if (get_magic_quotes_gpc()) {
+        function strip_array($var) {
+          return is_array($var) ? array_map("strip_array", $var) : stripslashes($var);
+        }
+        $_POST = strip_array($_POST);
+        $_SESSION = strip_array($_SESSION);
+        $_GET = strip_array($_GET);
       }
     }
 
