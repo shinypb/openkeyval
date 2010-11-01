@@ -126,7 +126,7 @@
         return false;
       }
 
-      if(trim($value) == '') {
+      if($value == '') {
         if(OpenKeyval_Storage_Cached::Get($key)) {
           OpenKeyval_Storage_Cached::Delete($key);
           self::Response(200, array('status' => 'deleted'));
