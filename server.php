@@ -298,12 +298,16 @@
         return parent::Set($key);
       }
 
+      $hash = OpenKeyval::HashForKey($key);
+
       $rv = parent::Set($key, $value);
       if($rv) {
         self::GetHandle()->set($key, serialize($value));
+        self::GetHandle()->set(OpenKeyval::kReadOnlyKeyPrefix . $hash, serialize($value));
       } else {
         //  weird, set failed
         self::GetHandle()->delete($key);
+        self::GetHandle()->delete(OpenKeyval::kReadOnlyKeyPrefix . $hash);
       }
       return $rv;
     }
