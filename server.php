@@ -40,6 +40,12 @@
         $command = '';
       }
 
+      if (isset($_REQUEST['key_info'])) {
+        # Mainly used for debugging, but also provides a way to lookup a the read-only key for a given key (without setting)
+        self::Response(200, array('key' => $key, 'hash' => self::HashForKey($key), 'read_only_key' => self::ReadOnlyKey($key)));
+        exit;
+      }
+
       if (strpos($_SERVER['REQUEST_URI'],'/store/')===0) {
         self::HandleBastardSonOfAProtocolJSONP();
       }
