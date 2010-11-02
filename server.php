@@ -239,7 +239,7 @@
         $path = self::PathForHash($key);
       } else {
         $hash = OpenKeyval::HashForKey($key);
-        $path = self::PathForHash($key);
+        $path = self::PathForHash($hash);
       }
       if(!file_exists($path)) {
         return null;
