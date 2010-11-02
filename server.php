@@ -288,7 +288,7 @@
 
       if($value = self::GetHandle()->get($key)) {
         $raw_value = unserialize($value);
-        if ($raw_value != NULL) {
+        if ($raw_value != null) {
           // Not sure why there are NULLs in the cache, but there are.  TODO: Fix root cause.
           return $raw_value;
         }
