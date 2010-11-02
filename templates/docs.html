@@ -2,25 +2,25 @@
 <html>
   <head>
     <title>OpenKeyval</title>
-    <meta property="og:title" content="OpenKeyval.org - open key/value store"/> 
-    <meta property="og:type" content="website"/> 
-    <meta property="og:image" content="http://openkeyval.org/statics/logo.png"/> 
-    <meta property="og:url" content="http://openkeyval.org/"/> 
-    <meta property="og:site_name" content="OpenKeyval.org"/> 
-    <meta property="fb:admins" content="556346067,537470690"/> 
+    <meta property="og:title" content="OpenKeyval.org - open key/value store"/>
+    <meta property="og:type" content="website"/>
+    <meta property="og:image" content="http://openkeyval.org/statics/logo.png"/>
+    <meta property="og:url" content="http://openkeyval.org/"/>
+    <meta property="og:site_name" content="OpenKeyval.org"/>
+    <meta property="fb:admins" content="556346067,537470690"/>
     <style>
       body {
         background: #fafaff;
         font-family: sans-serif;
         margin: 0;
       }
-      
+
       pre {
         padding:1em;
         background: #d1e2ea;
         border:1px dashed #0099e8;
       }
-      
+
       #header {
         background: #d1e2ea;
         border-bottom: 1px solid #ccc;
@@ -30,23 +30,23 @@
         top: 0;
         width: 100%;
       }
-      
+
       #header h1 {
         margin-top: 0;
       }
-      
+
       #header #intro {
         margin: 0 auto;
         width: 600px;
       }
-      
+
       #main {
         margin: 1em auto;
         padding-bottom: 2em;
         padding-top: 7em;
-        width: 600px;
+        width: 700px;
       }
-      
+
       #footer {
         background: #d1e2ea;
         border-top: 1px solid #ccc;
@@ -55,25 +55,29 @@
         text-align: center;
         width: 100%;
       }
-      
+
+      body.is-mobile #footer {
+        position: relative;
+      }
+
       #footer p {
         margin-top: 0.5em;
       }
-      
+
       h1, h2 {
         font-family: 'Cuprum', arial, serif;
       }
-      
+
       h1, h2, h3 {
         margin-bottom: 0;
       }
-      
+
       p {
         font-family: 'Molengo', arial, serif;
         margin-top: 0;
       }
     </style>
-    
+
     <link href='http://fonts.googleapis.com/css?family=Cuprum&subset=latin' rel='stylesheet' type='text/css'>
     <link href='http://fonts.googleapis.com/css?family=Molengo&subset=latin' rel='stylesheet' type='text/css'>
 
@@ -88,17 +92,17 @@
         web applications.</p>
       </div>
     </div>
-    
+
     <div id="main">
       <iframe style="margin-top:.5em" width=600 height=35 src="http://www.facebook.com/plugins/like.php?href=http%3A%2F%2Fopenkeyval.org&amp;layout=standard&amp;show_faces=true&amp;width=600&amp;action=like&amp;colorscheme=light&amp;height=35" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:600px; height:35px;" allowTransparency="true"></iframe>
 
       <h2>What?</h2>
       <p>OpenKeyval lets you store and retrieve data, without any configuration ahead of time.</p>
-          
+
       <h2>Why?</h2>
       <p>The idea here is to provide a data storage system that's as simple to use as humanly
       possible. We'll keep it safe and fast -- you worry about building something neat.</p>
-      
+
       <h2>How do I keep it secure?</h2>
       <p>OpenKeyval doesn't make any guarantees about security, but you can keep your data
       relatively private by giving your keys a distinct prefix. Think of it as a sort of
@@ -106,14 +110,14 @@
       or something else equally obscure.</p>
       <p>You can also provide read-only access to your data by using the read-only key
       that is returned with each value that you save.</p>
-      
+
       <h2>What's the catch?</h2>
       <p>There is no catch. There's no sign up, no payment, no hassles. The only limitation
       is that you can only store up to 64 KiB of data per key.</p>
-      
+
       <h2>The API</h2>
       <p>All of our status responses are given in JSON. Key retrieval is simply returned as raw data.</p>
-      
+
       <p>Store data by <code>POST</code>ing key-value pairs as form data to http://api.openkeyval.org/.
       We'll respond with a JSON object. If everything goes well, we'll return 'multiset' as the
       <code>status</code> and an an associative array of keys that were saved as <code>keys</code>.
@@ -122,32 +126,32 @@
       key can be used to give someone access to data without worrying about them modifying it -- it's
       not possible to figure out what the original key was based on the read-only version.
       </p>
-      
-      <p>Store data by POSTing form data to http://api.openkeyval.org/some-arbitrary-key. The value posted as 'data' will be saved to some-arbitrary key. Returns the text 'ok' and an 200 status code on success.</p>    
+
+      <p>Store data by POSTing form data to http://api.openkeyval.org/some-arbitrary-key. The value posted as 'data' will be saved to some-arbitrary key. Returns the text 'ok' and an 200 status code on success.</p>
       <p>Delete data by posting an empty string as 'data' to the same address. Returns a 200 status code and either 'removed' or 'not-found', depending on whether the value existed.</p>
       <p>Fetch data by GETting http://api.openkeyval.org/some-arbitrary-key. Returns the data with a 200 status code on success, or a 404 if not found.</p>
       <!--<p>To fetch that data using JSONP with the callback funcName() rather than its return value: http://api.openkeyval.org/some-arbitrary-key.callback:funcName</p>-->
       <p>To fetch that data and serve it with an arbitrary MIME type: http://api.openkeyval.org/some-arbitrary-key.image/png
-      
+
       <h2>Valid keys</h2>
       <p>Keys are case-sensitive, and can contain upper and lowercase characters, digits, dashes, and underscores and must be between 5 and 128 characters long.</p>
-      
+
       <h2>Valid data</h2>
       <p>Data is completely freeform and is binary safe. Data size is currently limited to 64 KiB (65,536 bytes).</p>
-  
+
       <h2>Examples using cURL</h2>
       <h3>Saving a single value</h3>
       <p>If we want to save the data 'California' to the key 'location':</p>
       <pre>$ curl -d "data=California" http://api.openkeyval.org/location</pre>
-      
+
       <h3>Saving multiple values</h3>
       <p>If we want to save the data 'California' to the key 'location' and 'Mark' to the key 'username':</p>
       <pre>$ curl -d "location=California&username=Mark" http://api.openkeyval.org/</pre>
-  
+
       <h3>Retrieving a value</h3>
       <p>To read back a value you've already stored:</p>
       <pre>$ curl http://api.openkeyval.org/location</pre>
-      
+
       <h3>Serving a file</h3>
       <p>OpenKeyval lets you serve back data with an arbitrary MIME type (the default is <code>text/plain</code>):
       <pre>$ curl http://api.openkeyval.org/location.application/octet-stream</pre>
@@ -201,9 +205,14 @@
       <h3>Bugs / Issues</h3>
       <p>Please report bugs on the GitHub <a href="http://github.com/shinyplasticbag/openkeyval/issues">issue tracker</a>.
     </div>
-    
+
     <div id="footer">
-      <p>OpenKeyval is by <a href="http://twitter.com/shinyplasticbag">Mark Christian</a> and <a href="http://www.brianklug.com/">Brian Klug</a>. Here's the <a href="http://shinyplasticbag.posterous.com/openkeyvalorg">original blog entry</a> that started this project.</p>      
+      <p>OpenKeyval is by <a href="http://twitter.com/shinyplasticbag">Mark Christian</a> and <a href="http://www.brianklug.com/">Brian Klug</a>. Here's the <a href="http://shinyplasticbag.posterous.com/openkeyvalorg">original blog entry</a> that started this project.</p>
     </div>
   </body>
+    <script>
+      if(['iPad', 'iPhone', 'iPod'].indexOf(navigator.platform) >= 0) {
+        document.body.className += ' is-mobile';
+      }
+    </script>
 </html>
