@@ -43,7 +43,6 @@
       if (isset($_REQUEST['key_info'])) {
         # Mainly used for debugging, but also provides a way to lookup a the read-only key for a given key (without setting)
         self::Response(200, array('key' => $key, 'hash' => self::HashForKey($key), 'read_only_key' => self::ReadOnlyKey($key)));
-        exit;
       }
 
       if (strpos($_SERVER['REQUEST_URI'],'/store/')===0) {
@@ -288,7 +287,11 @@
       }
 
       if($value = self::GetHandle()->get($key)) {
-        return unserialize($value);
+        $raw_value = unserialize($value);
+        if ($raw_value != NULL) {
+          // Not sure why there are NULLs in the cache, but there are.  TODO: Fix root cause.
+          return $raw_value;
+        }
       }
 
       //  not in cache
