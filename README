@@ -1,10 +1,24 @@
 OpenKeyval
 ==========
 
+Overview
+--------
+OpenKeyval is a persistent key/value store, presented as a simple web service. OpenKeyval.org provides everyone with free, unauthenticated access to its server. Anyone can write up to 64 KiB of data to any key. After writing a value, a read-only version of the key is returned, which allows you to safely provide read-only access to data without worrying that the other person might change its value.
+
+OpenKeyval requires no authentication and provides absolutely no guarantees of privacy. The key to the entire system is obscurity; suitably obscure keys are unlikely to be guessed by other users, and therefore safe. Read-only keys allow you to delegate access to other users without worrying about them making changes.
+
 Setting it up
 -------------
-- Make sure you're serving the openkeyval directory from the root of your server.
-- Your server supports .htaccess and is following the RewriteRules
-- Invent your own salt to use when hashing values and put it into a file called salt.txt, in the same directory as the source code. 
+OpenKeyval is a relatively simple application, but it has a few requirements. Here's the gist of it:
+- You must serve the openkeyval directory from the root of your server
+- Your server needs to support the RewriteRules in .htaccess
+- The script must be able to write to the data/ subdirectory, which it will try to create in the openkeyval directory
+- Invent your own salt to use when hashing values and put it into a file called salt.txt, in the same directory as the source code. This prevents malicious users from using rainbow tables to reverse a read-only key into a writable one.
 
-More of a README to come later...
+Wishlist
+--------
+- Server
+  - Refactor server to use Rails-style routing
+- JavaScript
+  - Optional caching using localStorage
+  - OpenKeyval.isValidKey method
