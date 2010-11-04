@@ -11,8 +11,8 @@ class Api extends PHPUnit_Framework_TestCase {
   private static $random_value;
   
   public function Api() {
-    self::$random_key = self::generateRandStr(10);
-    self::$random_value = self::generateRandStr(50);
+    self::$random_key = self::generateRandStr(rand(5,20));
+    self::$random_value = self::generateRandStr(rand(40,80));
   }
   
   public function Setup() {
@@ -31,13 +31,23 @@ class Api extends PHPUnit_Framework_TestCase {
     $url = "http://".$GLOBALS['CONFIG']['api_hostname']."/phpunit-" . self::$random_key;
     $data = self::$browser->getdata($url);
     $this->assertEquals($data,self::$random_value);    
+    $this->assertContains("Content-Length: ".strlen(self::$random_value),self::$browser->hdr);    
+    $this->assertContains("Content-Type: text/plain",self::$browser->hdr);
   }
   
+  public function testMIMEtype() {      
+    $type = "application/octet-stream";
+    $url = "http://".$GLOBALS['CONFIG']['api_hostname']."/phpunit-" . self::$random_key . "." . $type;
+    $data = self::$browser->getdata($url);
+    $this->assertEquals($data,self::$random_value);    
+    $this->assertContains("Content-Type: $type",self::$browser->hdr);
+  }  
+  
   public function testLeelooDallsMultiSet() {  
-    $random_key1 = self::generateRandStr(10);
-    $random_value1 = self::generateRandStr(50);
-    $random_key2 = self::generateRandStr(10);
-    $random_value2 = self::generateRandStr(50);
+    $random_key1 = self::generateRandStr(rand(5,20));
+    $random_value1 = self::generateRandStr(rand(40,80));
+    $random_key2 = self::generateRandStr(rand(5,20));
+    $random_value2 = self::generateRandStr(rand(40,80));
     
     $post = array($random_key1=>$random_value1,$random_key2=>$random_value2);
     
@@ -64,6 +74,23 @@ class Api extends PHPUnit_Framework_TestCase {
     $data = self::$browser->getdata($url);
     $this->assertEquals($data,$huge_random_value);    
   }
+
+  public function testNoKey() {      
+    $url = "http://".$GLOBALS['CONFIG']['api_hostname']."/";
+    $data = self::$browser->getdata($url);
+    $r = json_decode($data);
+    $this->assertEquals($r->error,"no_key_specified");        
+  }
+
+  public function testInvalidKey() {      
+    foreach (array("bad","invalid!","bad keys are bad","jack+jill")as $key) {
+      $url = "http://".$GLOBALS['CONFIG']['api_hostname']."/".$key;
+      $data = self::$browser->getdata($url);
+      $r = json_decode($data);
+      $this->assertEquals($r->error,"invalid_key");        
+    }
+  }
+
 
   private function generateRandStr($length){ 
     $randstr = ""; 
