@@ -1,4 +1,4 @@
 RewriteEngine On
 RewriteRule ^(aw)?stats/$ http://openkeyval.org/awstats/awstats.pl [R=301,L]
 RewriteRule ^statics/(.*)$ statics/$1 [L]
-RewriteRule ^(.*)$ server.php?key=$1 [QSA,L]
+RewriteRule ^(.*)$ index.php?key=$1 [QSA,L]

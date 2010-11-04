@@ -8,7 +8,7 @@
       self::fixMagicQuotesIfNeccessary();
 
       if($_SERVER['REQUEST_METHOD'] == 'GET' && $_SERVER['REQUEST_URI'] == '/') {
-        require_once 'templates/docs.html';
+        self::Response(400, array('error' => 'no_key_specified'));
         exit;
       }
 
@@ -189,7 +189,7 @@
     protected static function Salt() {
       static $salt = null;
       if(is_null($salt)) {
-        $filename = dirname(__FILE__) . '/salt.txt';
+        $filename = dirname(__FILE__) . '/../salt.txt';
         if(!file_exists($filename)) {
           die("Missing salt file (salt.txt in the same directory as this script).");
         }
@@ -209,7 +209,7 @@
 
   class OpenKeyval_Storage {
     protected function PathForHash($hash) {
-      $dirname = 'data/' . substr($hash, 0, 2) . '/'  . substr($hash, 2, 2) . '/'  . substr($hash, 4, 2) . '/'  . substr($hash, 6, 2);
+      $dirname = '../data/' . substr($hash, 0, 2) . '/'  . substr($hash, 2, 2) . '/'  . substr($hash, 4, 2) . '/'  . substr($hash, 6, 2);
 
       if(!file_exists($dirname)) {
         mkdir($dirname, 0777, $recursive = true);
