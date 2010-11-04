@@ -108,7 +108,7 @@
         } else {
           $content_type = 'text/plain';
         }
-        self::Response(200, $value, $content_type);
+        self::Response(200, $value, $content_type, $key);
       }
 
       self::Response(404, array('error' => 'not_found'));
@@ -161,12 +161,12 @@
       return !!preg_match('/^[-_a-z0-9]{5,128}$/i', $key);
     }
 
-    public static function Response($http_code, $body, $content_type = null) {
+    public static function Response($http_code, $body, $content_type = null, $key="") {
       $jsonp = self::determineJSONPCallback();
       if (isset($jsonp)) {
         $content_type = "text/javascript";
         $command = "";
-        $body = $_GET[$jsonp] . '(' . json_encode($body) . ');';
+        $body = $_GET[$jsonp] . '(' . json_encode($body) . ',' . json_encode($key) . ');';
       }
       $http_status_messages = array(
         200 => 'OK',
