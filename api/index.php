@@ -157,8 +157,10 @@
     public static function IsValidKey($key) {
       if(self::IsReadOnlyKey($key)) {
         $key = substr($key, strlen(self::kReadOnlyKeyPrefix));
+        return !!preg_match('/^[a-z0-9]$/i', $key);
+      } else {
+        return !!preg_match('/^[-_a-z0-9]{5,128}$/i', $key);
       }
-      return !!preg_match('/^[-_a-z0-9]{5,128}$/i', $key);
     }
 
     public static function Response($http_code, $body, $content_type = null, $key="") {
@@ -235,8 +237,8 @@
 
     public static function Get($key) {
       if(OpenKeyval::IsReadOnlyKey($key)) {
-        $key = substr($key, strlen(OpenKeyval::kReadOnlyKeyPrefix));
-        $path = self::PathForHash($key);
+        $hash = substr($key, strlen(OpenKeyval::kReadOnlyKeyPrefix));
+        $path = self::PathForHash($hash);
       } else {
         $hash = OpenKeyval::HashForKey($key);
         $path = self::PathForHash($hash);
