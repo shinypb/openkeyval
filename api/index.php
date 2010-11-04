@@ -108,7 +108,11 @@
         } else {
           $content_type = 'text/plain';
         }
-        self::Response(200, $value, $content_type);
+        if (self::determineJSONPCallback()) {
+          self::Response(200, array($value,$key), $content_type);
+        } else {
+          self::Response(200, $value, $content_type);
+        }
       }
 
       self::Response(404, array('error' => 'not_found'));
