@@ -255,14 +255,17 @@
 
       $hash = OpenKeyval::HashForKey($key);
       $path = self::PathForHash($hash);
-
-      return file_put_contents($path, $value, LOCK_EX);
+      $rv = file_put_contents($path, $value, LOCK_EX);
+      return ($rv !== false);
     }
   }
 
   class OpenKeyval_Storage_Cached extends OpenKeyval_Storage {
     protected static $handle;
     protected function GetHandle() {
+      if(!class_exists('Memcache')) {
+        return false;
+      }
       if(is_null(self::$handle)) {
         self::$handle = new Memcache();
         self::GetHandle()->connect('localhost', 11211) or self::$handle = false;
@@ -304,7 +307,7 @@
     public static function Set($key, $value) {
       if(!self::GetHandle()) {
         //  Memcache down?
-        return parent::Set($key);
+        return parent::Set($key, $value);
       }
 
       $hash = OpenKeyval::HashForKey($key);
