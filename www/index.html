@@ -4,7 +4,7 @@
     <title>OpenKeyval</title>
     <meta property="og:title" content="OpenKeyval.org - open key/value store"/>
     <meta property="og:type" content="website"/>
-    <meta property="og:image" content="http://openkeyval.org/statics/logo.png"/>
+    <meta property="og:image" content="http://cdn.openkeyval.org/statics/logo.png"/>
     <meta property="og:url" content="http://openkeyval.org/"/>
     <meta property="og:site_name" content="OpenKeyval.org"/>
     <meta property="fb:admins" content="556346067,537470690"/>
@@ -85,7 +85,7 @@
   <body>
     <div id="header">
       <div id="intro">
-        <img src="/statics/logo.png" alt="" align="right" height="100" width="164" />
+        <img src="http:////cdn.openkeyval.org/statics/logo.png" alt="" align="right" height="100" width="164" />
         <h1>OpenKeyval</h1>
         <p> OpenKeyval is a completely open key-value data store, exposed as a drop-dead
         simple web service. The goal is to make this a very easy way to persist data in
@@ -142,7 +142,7 @@
       <h2>Examples using openkeyval.js</h2>
       <p>In addition to the service, we also provide an official JavaScript library, vaguely modeled after HTML5's
       localStorage. To make use of it, just include the following snippet of code in your page:</p>
-      <p><pre>&lt;script src="http://openkeyval.org/statics/openkeyval.js"&gt;&lt;/script&gt;</pre></p>
+      <p><pre>&lt;script src="http://cdn.openkeyval.org/statics/openkeyval.js"&gt;&lt;/script&gt;</pre></p>
       <p>This will define an <code>window.remoteStorage</code> object with <code>getItem</code>, <code>setItem</code>, and <code>deleteItem</code> methods.
       By default, data will be memoized on a per-page basis. To disable this, call <code>OpenKeyval.shouldMemoizeData(false)</code>.</p>
 
@@ -237,7 +237,7 @@ window.remoteStorage.getItem('location', ourCallback);</pre>
         document.body.className += ' is-mobile';
       }
     </script>
-    <script src="/statics/openkeyval.js">
+    <script src="http://cdn.openkeyval.org/statics/openkeyval.js">
       //  Example calls:
       //  window.remoteStorage.setItem('location', 'Right here');
       //  window.remoteStorage.getItem('location', function(value, key) { console.log(key, value); })
