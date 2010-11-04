@@ -4,7 +4,7 @@
     <title>OpenKeyval</title>
     <meta property="og:title" content="OpenKeyval.org - open key/value store"/>
     <meta property="og:type" content="website"/>
-    <meta property="og:image" content="http://openkeyval.org/statics/logo.png"/>
+    <meta property="og:image" content="http://cdn.openkeyval.org/statics/logo.png"/>
     <meta property="og:url" content="http://openkeyval.org/"/>
     <meta property="og:site_name" content="OpenKeyval.org"/>
     <meta property="fb:admins" content="556346067,537470690"/>
@@ -85,7 +85,7 @@
   <body>
     <div id="header">
       <div id="intro">
-        <img src="/statics/logo.png" alt="" align="right" height="100" width="164" />
+        <img src="http:////cdn.openkeyval.org/statics/logo.png" alt="" align="right" height="100" width="164" />
         <h1>OpenKeyval</h1>
         <p> OpenKeyval is a completely open key-value data store, exposed as a drop-dead
         simple web service. The goal is to make this a very easy way to persist data in
@@ -138,6 +138,28 @@
 
       <h2>Valid data</h2>
       <p>Data is completely freeform and is binary safe. Data size is currently limited to 64 KiB (65,536 bytes).</p>
+
+      <h2>Examples using openkeyval.js</h2>
+      <p>In addition to the service, we also provide an official JavaScript library, vaguely modeled after HTML5's
+      localStorage. To make use of it, just include the following snippet of code in your page:</p>
+      <p><pre>&lt;script src="http://cdn.openkeyval.org/statics/openkeyval.packed.js"&gt;&lt;/script&gt;</pre></p>
+      <p>This will define an <code>window.remoteStorage</code> object with <code>getItem</code>, <code>setItem</code>, and <code>deleteItem</code> methods.
+      By default, data will be memoized on a per-page basis. To disable this, call <code>OpenKeyval.shouldMemoizeData(false)</code>.</p>
+
+      <h3>Saving a value</h3>
+      <p>This will save the data 'the couch' to the key 'location'. If you'd like to check the result once the save completes, you can pass a callback to this method.</p>
+      <p><pre>window.remoteStorage.setItem('location', 'the couch', optionalCallbackFunction);</pre></p>
+
+      <h3>Getting a value</h3>
+      <p>To retrieve the value of the key 'location', call window.remoteStorage.getItem with the key you'd like to retrieve and a callback that will receive the data. Callbacks must be used because data is loaded asynchronously, however, if memoization is on by default, your callback will be called immediately.
+      <p><pre>var ourCallback = function(value, key) {
+  alert('The value of ' + key ' + is ' + value);
+};
+window.remoteStorage.getItem('location', ourCallback);</pre>
+
+      <h3>Deleting a value</h3>
+      <p>To delete the 'location' key:</p>
+      <p><pre>window.remoteStorage.deleteItem('location', optionalCallbackFunction);</pre></p>
 
       <h2>Examples using cURL</h2>
       <h3>Saving a single value</h3>
@@ -214,5 +236,11 @@
       if(['iPad', 'iPhone', 'iPod'].indexOf(navigator.platform) >= 0) {
         document.body.className += ' is-mobile';
       }
+    </script>
+    <script src="http://cdn.openkeyval.org/statics/openkeyval.js">
+      //  Example calls:
+      //  window.remoteStorage.setItem('location', 'Right here');
+      //  window.remoteStorage.getItem('location', function(value, key) { console.log(key, value); })
+      //  window.remoteStorage.deleteItem('location');
     </script>
 </html>
