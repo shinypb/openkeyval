@@ -1,10 +1,7 @@
 <?php
 
-include('../config.inc');
-include('../api/server.inc');
-include('curl.class.php');
-
-global $CONFIG;
+require_once('../api/server.inc');
+require_once('curl.class.php');
 
 class Api extends PHPUnit_Framework_TestCase {
   private static $browser;
@@ -17,6 +14,8 @@ class Api extends PHPUnit_Framework_TestCase {
   }
   
   public function Setup() {
+     global $CONFIG;
+    include('../config.inc');
     self::$browser = new extractor();
   }
     
