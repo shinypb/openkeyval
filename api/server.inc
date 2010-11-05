@@ -7,6 +7,11 @@
     public static function Dispatch() {
       self::fixMagicQuotesIfNeccessary();
 
+      if ($_SERVER['REQUEST_METHOD'] == 'HEAD') {
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $GLOBALS['WAS_HEAD'] = true;
+      }
+
       if($_SERVER['REQUEST_METHOD'] == 'GET' && $_SERVER['REQUEST_URI'] == '/') {
         self::Response(400, array('error' => 'no_key_specified'));
         exit;
@@ -40,11 +45,6 @@
         $command = '';
       }
 
-      if (isset($_REQUEST['key_info'])) {
-        # Mainly used for debugging, but also provides a way to lookup a the read-only key for a given key (without setting)
-        self::Response(200, array('key' => $key, 'hash' => self::HashForKey($key), 'read_only_key' => self::ReadOnlyKey($key)));
-      }
-
       if (strpos($_SERVER['REQUEST_URI'],'/store/')===0) {
         self::HandleBastardSonOfAProtocolJSONP();
       }
@@ -56,6 +56,16 @@
       if(!self::IsValidKey($key)) {
         self::Response(400, array('error' => 'invalid_key'));
       }
+
+      if (isset($_REQUEST['key_info'])) {
+        # Mainly used for debugging, but also provides a way to lookup a the read-only key for a given key (without setting)
+        if(self::IsReadOnlyKey($key)) {
+          self::Response(200, array('read_only_key' => $key));
+        } else {
+          self::Response(200, array('key' => $key, 'hash' => self::HashForKey($key), 'read_only_key' => self::ReadOnlyKey($key)));
+        }
+      }
+
 
       if($_SERVER['REQUEST_METHOD'] == 'GET') {
         self::HandleGET($key, $command);
@@ -185,7 +195,9 @@
         $body = json_encode($body);
       }
       $content_type = is_null($content_type) ? 'text/plain' : $content_type;
-      echo $body;
+      if (!$GLOBALS['WAS_HEAD']) {
+        echo $body;
+      }
       exit;
     }
 

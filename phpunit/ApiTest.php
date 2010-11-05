@@ -147,7 +147,27 @@ class Api extends PHPUnit_Framework_TestCase {
     $data = self::$browser->getdata($url);
     $r = json_decode($data);
     $this->assertEquals('phpunit-'.self::$random_key,$r->key);
-    // todo rok
+  }  
+
+  public function testHEAD() {      
+    $url = "/phpunit-" . self::$random_key;
+    $portno = 80;
+    $method = "HEAD";
+    $http_response = "";
+    $http_request .= $method." ".$url ." HTTP/1.1\r\n";
+    $http_request .= "Host: ".$GLOBALS['CONFIG']['api_hostname']."\r\n";
+    $http_request .= "\r\n";
+
+    $fp = fsockopen($GLOBALS['CONFIG']['api_hostname'], $portno, $errno, $errstr);
+    if($fp){
+        fputs($fp, $http_request);
+        while (!feof($fp)) $http_response .= fgets($fp, 128);
+        fclose($fp);
+    }
+    $this->assertContains("200 OK",$http_response);
+    # HEAD request shouldn't have the body in it
+    $this->assertEquals(strpos($http_response,self::$random_value),false);
+
   }  
 
 }
