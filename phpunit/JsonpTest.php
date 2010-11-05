@@ -1,7 +1,7 @@
 <?php
 
-include('../config.inc');
-include('curl.class.php');
+require_once('../config.inc');
+require_once('curl.class.php');
 
 global $CONFIG;
 
