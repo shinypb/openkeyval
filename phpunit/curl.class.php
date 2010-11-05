@@ -34,7 +34,7 @@
 		
 		function getdata($url , $post=array() ,  $referer = "" , $setcookie=false , $usecookie=false , $useragent="" , $alternate_post_format = false){
 			$ch = curl_init();
-			#curl_setopt ($ch, CURLOPT_HEADER, true);
+			curl_setopt ($ch, CURLOPT_HEADER, true);
 			curl_setopt ($ch, CURLOPT_FOLLOWLOCATION, true);
 			
 			if($proxyport && $proxyaddr) curl_setopt($ch, CURLOPT_PROXY,trim($proxyaddr).":".trim($proxyport));
@@ -77,12 +77,14 @@
 			curl_close ($ch);
 			unset($ch);
 			
-			$theData = preg_split("/(\r\n){2,2}/", $data, 2) ;
-			$showData = $theData[0];
+			$theData = preg_split("/(\r\n){2,2}/", $data, 3) ;
+			$matches = count($theData);
+						
+			$showData = $theData[$matches-1];
 			
 			$this->error = $err;
-			$this->hdr = $theData[0];
-			$this->parseHeader($theData[0]) ;
+			$this->hdr = $theData[$matches-2];
+			$this->parseHeader($theData[$matches-2]) ;
 			
 			return $showData;
 		}
