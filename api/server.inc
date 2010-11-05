@@ -283,6 +283,7 @@
       }
 
       self::GetHandle()->delete($key);
+      self::GetHandle()->delete(OpenKeyval::kReadOnlyKeyPrefix.OpenKeyval::HashForKey($key));
       return parent::Delete($key);
     }
 

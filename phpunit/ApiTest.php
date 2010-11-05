@@ -126,7 +126,7 @@ class Api extends PHPUnit_Framework_TestCase {
 
   public function testInvalidKey() {      
     # test a bunch with GET
-    foreach (array("bad","invalid!","bad keys are bad","jack+jill")as $key) {
+    foreach (array("bad","invalid!","rok-foobar","bad keys are bad","jack+jill")as $key) {
       $url = "http://".$GLOBALS['CONFIG']['api_hostname']."/".$key;
       $data = self::$browser->getdata($url);
       $r = json_decode($data);
