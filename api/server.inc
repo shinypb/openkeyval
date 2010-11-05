@@ -328,6 +328,4 @@
     }
   }
 
-OpenKeyval::Dispatch();
-
 ?>

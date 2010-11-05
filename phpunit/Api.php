@@ -1,7 +1,7 @@
 <?php
 
 include('../config.inc');
-include('../api/index.php');
+include('../api/server.inc');
 include('curl.class.php');
 
 global $CONFIG;
