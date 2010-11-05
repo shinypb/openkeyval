@@ -158,7 +158,7 @@
     public static function IsValidKey($key) {
       if(self::IsReadOnlyKey($key)) {
         $key = substr($key, strlen(self::kReadOnlyKeyPrefix));
-        return !!preg_match('/^[a-z0-9]$/i', $key);
+        return !!preg_match('/^[a-z0-9]{40}$/i', $key);
       } else {
         return !!preg_match('/^[-_a-z0-9]{5,128}$/i', $key);
       }

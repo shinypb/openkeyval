@@ -101,6 +101,23 @@ class Api extends PHPUnit_Framework_TestCase {
     $this->assertEquals($data,$huge_random_value);    
   }
 
+  public function testMySpoonIsTooBig() {  
+    $small_key = self::generateRandStr(10);
+    $oversize_key = self::generateRandStr(129);
+    $small_value = self::generateRandStr(10);
+    $oversize_value = self::generateRandStr(65537);
+    
+    $url = "http://".$GLOBALS['CONFIG']['api_hostname']."/" . $small_key;
+    $data = self::$browser->getdata($url, array('data' => $oversize_value) );
+    $r = json_decode($data);
+    $this->assertContains("data too big",$r->error);    
+
+    $url = "http://".$GLOBALS['CONFIG']['api_hostname']."/" . $oversize_key;
+    $data = self::$browser->getdata($url, array('data' => $small_value) );
+    $r = json_decode($data);
+    $this->assertContains("invalid_key",$r->error);    
+}
+
   public function testNoKey() {      
     $url = "http://".$GLOBALS['CONFIG']['api_hostname']."/";
     $data = self::$browser->getdata($url);
