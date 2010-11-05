@@ -1,8 +1,8 @@
 <?php
 
-include('../config.inc');
-include('../api/server.inc');
-include('curl.class.php');
+require_once('../config.inc');
+require_once('../api/server.inc');
+require_once('curl.class.php');
 
 global $CONFIG;
 
@@ -14,9 +14,9 @@ class Readonly extends PHPUnit_Framework_TestCase {
   private static $read_only_key;
   
   public function Readonly() {
-    self::$random_key = self::generateRandStr(rand(5,20));
-    self::$random_value = self::generateRandStr(rand(40,80));
-    self::$random_value2 = self::generateRandStr(rand(40,80));
+    self::$random_key = generateRandStr(rand(5,20));
+    self::$random_value = generateRandStr(rand(40,80));
+    self::$random_value2 = generateRandStr(rand(40,80));
   }
   
   public function Setup() {
@@ -57,20 +57,7 @@ class Readonly extends PHPUnit_Framework_TestCase {
     $this->assertEquals($data,self::$random_value2);    
   }
 
-  private function generateRandStr($length){ 
-    $randstr = ""; 
-    for($i=0; $i<$length; $i++) { 
-       $randnum = mt_rand(0,61); 
-       if($randnum < 10) { 
-          $randstr .= chr($randnum+48); 
-       } else if($randnum < 36) { 
-          $randstr .= chr($randnum+55); 
-       } else { 
-          $randstr .= chr($randnum+61); 
-       }
-    }
-    return $randstr; 
-  } 
+
 
 }
 

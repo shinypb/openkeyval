@@ -9,8 +9,8 @@ class Api extends PHPUnit_Framework_TestCase {
   private static $random_value;
   
   public function Api() {
-    self::$random_key = self::generateRandStr(rand(5,20));
-    self::$random_value = self::generateRandStr(rand(40,80));
+    self::$random_key = generateRandStr(rand(5,20));
+    self::$random_value = generateRandStr(rand(40,80));
   }
   
   public function Setup() {
@@ -69,10 +69,10 @@ class Api extends PHPUnit_Framework_TestCase {
   }  
 
   public function testLeelooDallsMultiSet() {  
-    $random_key1 = self::generateRandStr(rand(5,20));
-    $random_value1 = self::generateRandStr(rand(40,80));
-    $random_key2 = self::generateRandStr(rand(5,20));
-    $random_value2 = self::generateRandStr(rand(40,80));
+    $random_key1 = generateRandStr(rand(5,20));
+    $random_value1 = generateRandStr(rand(40,80));
+    $random_key2 = generateRandStr(rand(5,20));
+    $random_value2 = generateRandStr(rand(40,80));
     
     $post = array($random_key1=>$random_value1,$random_key2=>$random_value2);
     
@@ -85,8 +85,8 @@ class Api extends PHPUnit_Framework_TestCase {
   }
   
   public function testJonesBigAssTruckRentalAndKeyValueStorage() {  
-    $huge_random_key = self::generateRandStr(128);
-    $huge_random_value = self::generateRandStr(65535);
+    $huge_random_key = generateRandStr(128);
+    $huge_random_value = generateRandStr(65535);
     
     # set
     $url = "http://".$GLOBALS['CONFIG']['api_hostname']."/" . $huge_random_key;
@@ -101,10 +101,10 @@ class Api extends PHPUnit_Framework_TestCase {
   }
 
   public function testMySpoonIsTooBig() {  
-    $small_key = self::generateRandStr(10);
-    $oversize_key = self::generateRandStr(129);
-    $small_value = self::generateRandStr(10);
-    $oversize_value = self::generateRandStr(65537);
+    $small_key = generateRandStr(10);
+    $oversize_key = generateRandStr(129);
+    $small_value = generateRandStr(10);
+    $oversize_value = generateRandStr(65537);
     
     $url = "http://".$GLOBALS['CONFIG']['api_hostname']."/" . $small_key;
     $data = self::$browser->getdata($url, array('data' => $oversize_value) );
@@ -149,21 +149,6 @@ class Api extends PHPUnit_Framework_TestCase {
     $this->assertEquals('phpunit-'.self::$random_key,$r->key);
     // todo rok
   }  
-
-  private function generateRandStr($length){ 
-    $randstr = ""; 
-    for($i=0; $i<$length; $i++) { 
-       $randnum = mt_rand(0,61); 
-       if($randnum < 10) { 
-          $randstr .= chr($randnum+48); 
-       } else if($randnum < 36) { 
-          $randstr .= chr($randnum+55); 
-       } else { 
-          $randstr .= chr($randnum+61); 
-       }
-    }
-    return $randstr; 
-  } 
 
 }
 
