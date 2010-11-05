@@ -102,7 +102,7 @@
 
     public static function HandleGET($key, $command) {
       $value = OpenKeyval_Storage_Cached::Get($key);
-      if($value !== false) {
+      if($value !== NULL) {
         if(strpos($command, '/')) {
           $content_type = $command;
           header('Content-Disposition: filename="' . $key . '"');

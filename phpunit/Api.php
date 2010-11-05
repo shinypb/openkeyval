@@ -1,6 +1,7 @@
 <?php
 
 include('../config.inc');
+include('../api/index.php');
 include('curl.class.php');
 
 global $CONFIG;
@@ -33,6 +34,7 @@ class Api extends PHPUnit_Framework_TestCase {
     $this->assertEquals($data,self::$random_value);    
     $this->assertContains("Content-Length: ".strlen(self::$random_value),self::$browser->hdr);    
     $this->assertContains("Content-Type: text/plain",self::$browser->hdr);
+    $this->assertContains("200 OK",self::$browser->hdr);
   }
   
   public function testMIMEtype() {      
@@ -44,13 +46,27 @@ class Api extends PHPUnit_Framework_TestCase {
   }  
 
   public function testZeroValue() {      
+    # Literal value of "0" should be treated like a valud value (See bug #10).
     $url = "http://".$GLOBALS['CONFIG']['api_hostname']."/zerome";
     # set
     $data = self::$browser->getdata($url, array('data'=>"0"));
     # get
     $data = self::$browser->getdata($url);
     $this->assertEquals($data,"0"); 
+  }  
 
+  public function testDelete() {      
+    $url = "http://".$GLOBALS['CONFIG']['api_hostname']."/deleteme";
+    $data = self::$browser->getdata($url, array('data'=>"smiles"));
+    $data = self::$browser->getdata($url);
+    $this->assertEquals($data,"smiles"); 
+    $data = self::$browser->getdata($url, array('data'=>""));
+    $r = json_decode($data);
+    $this->assertEquals($r->status,"deleted");
+    $data = self::$browser->getdata($url);
+    $r = json_decode($data);
+    $this->assertEquals($r->error,"not_found");
+    $this->assertContains("404 Not Found",self::$browser->hdr);
   }  
 
   public function testLeelooDallsMultiSet() {  
@@ -110,6 +126,13 @@ class Api extends PHPUnit_Framework_TestCase {
     $this->assertEquals($r->key,"bad");
   }
 
+  public function testKeyInfo() {      
+    $url = "http://".$GLOBALS['CONFIG']['api_hostname']."/phpunit-" . self::$random_key . "?key_info";
+    $data = self::$browser->getdata($url);
+    $r = json_decode($data);
+    $this->assertEquals('phpunit-'.self::$random_key,$r->key);
+    // todo rok
+  }  
 
   private function generateRandStr($length){ 
     $randstr = ""; 
