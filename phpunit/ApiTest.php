@@ -14,7 +14,7 @@ class Api extends PHPUnit_Framework_TestCase {
   }
   
   public function Setup() {
-     global $CONFIG;
+    global $CONFIG;
     include('../config.inc');
     self::$browser = new extractor();
   }

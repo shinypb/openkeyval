@@ -1,5 +1,8 @@
 <?php
 
+  global $CONFIG;
+  require_once('../config.inc');
+
   class OpenKeyval {
     const kMaxDataSize = 65536;
     const kReadOnlyKeyPrefix = 'rok-';
@@ -204,9 +207,9 @@
     protected static function Salt() {
       static $salt = null;
       if(is_null($salt)) {
-        $filename = dirname(__FILE__) . '/../salt.txt';
+        $filename = $GLOBALS['CONFIG']['dir'] . '/' . 'salt.txt';
         if(!file_exists($filename)) {
-          die("Missing salt file (salt.txt in the same directory as this script).");
+          die("Missing salt file (salt.txt in ".$GLOBALS['CONFIG']['dir'].").");
         }
         $salt = trim(file_get_contents($filename));
       }
@@ -224,7 +227,7 @@
 
   class OpenKeyval_Storage {
     protected function PathForHash($hash) {
-      $dirname = '../data/' . substr($hash, 0, 2) . '/'  . substr($hash, 2, 2) . '/'  . substr($hash, 4, 2) . '/'  . substr($hash, 6, 2);
+      $dirname = $GLOBALS['CONFIG']['data_dir'] . '/' . substr($hash, 0, 2) . '/'  . substr($hash, 2, 2) . '/'  . substr($hash, 4, 2) . '/'  . substr($hash, 6, 2);
 
       if(!file_exists($dirname)) {
         mkdir($dirname, 0777, $recursive = true);
