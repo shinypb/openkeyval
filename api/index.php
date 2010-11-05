@@ -101,7 +101,8 @@
     }
 
     public static function HandleGET($key, $command) {
-      if($value = OpenKeyval_Storage_Cached::Get($key)) {
+      $value = OpenKeyval_Storage_Cached::Get($key);
+      if($value !== false) {
         if(strpos($command, '/')) {
           $content_type = $command;
           header('Content-Disposition: filename="' . $key . '"');
@@ -131,7 +132,7 @@
         return false;
       }
 
-      if($value == '') {
+      if($value === '') {
         if(OpenKeyval_Storage_Cached::Get($key)) {
           OpenKeyval_Storage_Cached::Delete($key);
           self::Response(200, array('status' => 'deleted'));

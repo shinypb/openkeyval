@@ -42,7 +42,17 @@ class Api extends PHPUnit_Framework_TestCase {
     $this->assertEquals($data,self::$random_value);    
     $this->assertContains("Content-Type: $type",self::$browser->hdr);
   }  
-  
+
+  public function testZeroValue() {      
+    $url = "http://".$GLOBALS['CONFIG']['api_hostname']."/zerome";
+    # set
+    $data = self::$browser->getdata($url, array('data'=>"0"));
+    # get
+    $data = self::$browser->getdata($url);
+    $this->assertEquals($data,"0"); 
+
+  }  
+
   public function testLeelooDallsMultiSet() {  
     $random_key1 = self::generateRandStr(rand(5,20));
     $random_value1 = self::generateRandStr(rand(40,80));
@@ -83,12 +93,21 @@ class Api extends PHPUnit_Framework_TestCase {
   }
 
   public function testInvalidKey() {      
+    # test a bunch with GET
     foreach (array("bad","invalid!","bad keys are bad","jack+jill")as $key) {
       $url = "http://".$GLOBALS['CONFIG']['api_hostname']."/".$key;
       $data = self::$browser->getdata($url);
       $r = json_decode($data);
       $this->assertEquals($r->error,"invalid_key");        
     }
+    
+    # try to sneak one bad one in a multi-set POST
+    $post = array("goodkey"=>"joy","bad"=>"not joy");
+    $url = "http://".$GLOBALS['CONFIG']['api_hostname']."/";
+    $data = self::$browser->getdata($url, $post);
+    $r = json_decode($data);
+    $this->assertEquals($r->error,"invalid_key");
+    $this->assertEquals($r->key,"bad");
   }
 
 
