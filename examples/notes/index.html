@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Notes</title>
+    <style>
+      html {
+        height: 100%;
+      }
+
+      body {
+        height: 100%;
+        font-family: sans-serif;
+        margin: 0;
+      }
+
+      #main {
+        display: none;
+        height: 100%;
+        width: 100%;
+      }
+
+      #contents {
+        padding: 0;
+        top: 0;
+        bottom: 35px;
+        list-style: none;
+        margin: 0;
+        overflow-x: hidden;
+        overflow-y: scroll;
+        position: fixed;
+        width: 200px;
+      }
+
+      #contents a {
+        color: #333;
+        display: inline-block;
+        padding: 0.125em;
+        text-decoration: none;
+        width: 100%;
+      }
+
+      #contents a:hover {
+        background: #eeeeee;
+        background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#ffffff), to(#eeeeee));
+      }
+
+      #contents li.selected a {
+        background: #70a5db;
+        background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#70a5db), to(#2d6eba));
+        border-top: #5a94d1;
+        border-bottom: #2769b7;
+        color: #fff;
+        font-weight: bold;
+      }
+
+      #toolbar {
+        background: #eef;
+        border-top: 1px solid #ccf;
+        padding: 0 0.5em;
+        bottom: 0;
+        height: 35px;
+        line-height: 35px;
+        text-align: right;
+        position: fixed;
+        left: 0;
+        right: 0;
+      }
+
+      #text {
+        border: 0;
+        font-family: sans-serif;
+        font-size: 1em;
+        position: fixed;
+        left: 200px;
+        top: 0;
+        bottom: 35px;
+        padding: 1em;
+        right: 0;
+      }
+
+      #text:focus {
+        outline: none;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="login_container">
+      <input type="password" id="password" />
+      <input type="button" id="login_button" value="Log in" />
+    </div>
+
+    <div id="main">
+      <ul id="contents">
+      </ul>
+
+      <textarea id="text"></textarea>
+
+      <div id="toolbar">
+        <input type="button" id="new_note" value="New note" />
+        <input type="button" id="delete_note" value="Delete note" />
+        <input type="button" id="save_note" value="Save note" />
+      </div>
+    </div>
+  </body>
+
+  <script src="../../www/statics/openkeyval.js"></script>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js" type="text/javascript"></script>
+  <script src="aes.js"></script>
+  <script src="sha1.js"></script>
+
+  <script>
+    var OpenKeyvalNotes = {
+      notes: null,
+      password: null,
+      noteData: {},
+      currentNote: null,
+
+      didReceiveNote: function(data) {
+        var note = JSON.parse(data);
+        console.log(note);
+        OpenKeyvalNotes.noteData[note.name] = note.text;
+        OpenKeyvalNotes.displayNote(note.name);
+      },
+
+      didReceiveNotesList: function(data) {
+        console.log(data);
+        OpenKeyvalNotes.notes = data ? JSON.parse(data) : null;
+        OpenKeyvalNotes.notes = OpenKeyvalNotes.notes.sort() || {};
+        console.log(OpenKeyvalNotes.notes);
+
+        if(OpenKeyvalNotes.notes.length > 0) {
+          OpenKeyvalNotes.currentNote = OpenKeyvalNotes.notes[0];
+          OpenKeyvalNotes.fetchNote(OpenKeyvalNotes.currentNote);
+        }
+
+        OpenKeyvalNotes.refreshNotesList();
+        $('#main').show();
+      },
+
+      refreshNotesList: function() {
+        console.log(OpenKeyvalNotes.currentNote);
+        $('#contents').html('');
+        $(OpenKeyvalNotes.notes).each(function(i, value) {
+          var link = $('<a>').html(value).attr('href', '#');
+          var item = $('<li />').html(link);
+          if(value === OpenKeyvalNotes.currentNote) {
+            item.addClass('selected');
+          }
+
+          item.appendTo($('#contents'));
+        });
+      },
+
+      storeNote: function(name, text, callback) {
+        OpenKeyvalNotes.noteData[name] = text;
+        var data = { name: name, text: text };
+        window.remoteStorage.setItem(OpenKeyvalNotes.key('note:' + name), JSON.stringify(data), callback);
+      },
+
+      storeNotesList: function() {
+        window.remoteStorage.setItem(OpenKeyvalNotes.key('notes'), JSON.stringify($.unique(OpenKeyvalNotes.notes).sort()));
+      },
+
+      key: function(key) {
+        return 'openkeyvalnotes-' + SHA1(OpenKeyvalNotes.password + key);
+      },
+
+      init: function() {
+        $('#login_button').click(OpenKeyvalNotes.onLoginButtonClick);
+        $('#new_note').click(OpenKeyvalNotes.onNewNoteClick);
+        $('#delete_note').click(OpenKeyvalNotes.onDeleteNoteClick);
+        $('#save_note').click(OpenKeyvalNotes.onSaveNoteClick);
+        $('#contents').click(OpenKeyvalNotes.onNoteClick);
+
+        OpenKeyvalNotes.password = 'test';
+        OpenKeyvalNotes.onLoginButtonClick();
+      },
+
+      onDeleteNoteClick: function(e) {
+        if(!confirm("Are you sure you want to remove '" + OpenKeyvalNotes.currentNote + "'? This can't be undone.")) {
+          return;
+        }
+
+        var i = OpenKeyvalNotes.notes.indexOf(OpenKeyvalNotes.currentNote);
+        delete OpenKeyvalNotes.noteData[OpenKeyvalNotes.currentNote];
+        OpenKeyvalNotes.notes = OpenKeyvalNotes.notes.slice(0, i).concat(OpenKeyvalNotes.notes.slice(i + 1));
+        OpenKeyvalNotes.storeNote(OpenKeyvalNotes.currentNote, null);
+        OpenKeyvalNotes.storeNotesList();
+        OpenKeyvalNotes.currentNote = (OpenKeyvalNotes.notes.length > 0) ? OpenKeyvalNotes.notes[0] : null;
+        OpenKeyvalNotes.displayNote(OpenKeyvalNotes.currentNote);
+        OpenKeyvalNotes.refreshNotesList();
+      },
+
+      onSaveNoteClick: function(e) {
+        OpenKeyvalNotes.storeNote(OpenKeyvalNotes.currentNote, $('#text').val(), function() {
+          $(e.target).attr('disabled', false);
+        });
+      },
+
+      onLoginButtonClick: function() {
+        $('#login_container').hide();
+        OpenKeyvalNotes.password = $('#password').val();
+        OpenKeyvalNotes.fetchNotesList();
+      },
+
+      onNewNoteClick: function() {
+        var name = prompt('Create a new note called:').trim();
+        if(!name) {
+          return;
+        }
+
+        if(OpenKeyvalNotes.notes.indexOf(name) < 0) {
+          //  Note doesn't exist; create it
+          OpenKeyvalNotes.notes.push(name);
+          OpenKeyvalNotes.storeNotesList();
+          OpenKeyvalNotes.storeNote(name, 'This is a new note');
+        }
+
+        OpenKeyvalNotes.displayNote(name);
+        OpenKeyvalNotes.refreshNotesList();
+      },
+
+      onNoteClick: function(e) {
+        if(e.target.tagName.toLowerCase() !== 'a') {
+          return;
+        }
+
+        e.preventDefault();
+        console.log(e.target);
+
+        $('#contents .selected').removeClass('selected');
+        $(e.target).parent().addClass('selected');
+
+        var name = e.target.innerText;
+        if(OpenKeyvalNotes.notes[name]) {
+          OpenKeyvalNotes.displayNote(name);
+        } else {
+          $('#text').html('');
+          $('#text').attr('disabled', true);
+          OpenKeyvalNotes.fetchNote(name);
+        }
+      },
+
+      fetchNotesList: function() {
+        console.log('Fetching note list');
+        window.remoteStorage.getItem(OpenKeyvalNotes.key('notes'), OpenKeyvalNotes.didReceiveNotesList);
+      },
+
+      fetchNote: function(name) {
+        console.log('Fetching', name);
+        window.remoteStorage.getItem(OpenKeyvalNotes.key('note:' + name), OpenKeyvalNotes.didReceiveNote);
+      },
+
+      displayNote: function(name) {
+        OpenKeyvalNotes.currentNote = name;
+        console.log(name);
+        console.log(OpenKeyvalNotes.noteData[name]);
+        $('#text').attr('disabled', false);
+        $('#text').html(OpenKeyvalNotes.noteData[name]);
+      },
+    };
+    $(document).ready(OpenKeyvalNotes.init);
+  </script>
+</html>
