@@ -37,9 +37,6 @@
 			curl_setopt ($ch, CURLOPT_HEADER, true);
 			curl_setopt ($ch, CURLOPT_FOLLOWLOCATION, true);
 			
-			if($proxyport && $proxyaddr) curl_setopt($ch, CURLOPT_PROXY,trim($proxyaddr).":".trim($proxyport));
-			if($proxyuser && $proxypass) curl_setopt($ch, CURLOPT_PROXYUSERPWD,trim($proxyuser).":".trim($proxypass));
-			
 			if($setcookie)	curl_setopt($ch, CURLOPT_COOKIEJAR, $this->cookiefile);
 			if($usecookie)	curl_setopt($ch, CURLOPT_COOKIEFILE, $this->cookiefile);
 			if($this->timeout) curl_setopt($ch, CURLOPT_TIMEOUT, $this->timeout);
