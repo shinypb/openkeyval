@@ -198,7 +198,7 @@
         $body = json_encode($body);
       }
       $content_type = is_null($content_type) ? 'text/plain' : $content_type;
-      if (!$GLOBALS['WAS_HEAD']) {
+      if (!isset($GLOBALS['WAS_HEAD'])) {
         echo $body;
       }
       exit;
