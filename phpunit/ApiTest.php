@@ -1,10 +1,7 @@
 <?php
 
-include('../config.inc');
-include('../api/server.inc');
-include('curl.class.php');
-
-global $CONFIG;
+require_once('../api/server.inc');
+require_once('curl.class.php');
 
 class Api extends PHPUnit_Framework_TestCase {
   private static $browser;
@@ -12,11 +9,13 @@ class Api extends PHPUnit_Framework_TestCase {
   private static $random_value;
   
   public function Api() {
-    self::$random_key = self::generateRandStr(rand(5,20));
-    self::$random_value = self::generateRandStr(rand(40,80));
+    self::$random_key = generateRandStr(rand(5,20));
+    self::$random_value = generateRandStr(rand(40,80));
   }
   
   public function Setup() {
+    global $CONFIG;
+    include('../config.inc');
     self::$browser = new extractor();
   }
     
@@ -70,10 +69,10 @@ class Api extends PHPUnit_Framework_TestCase {
   }  
 
   public function testLeelooDallsMultiSet() {  
-    $random_key1 = self::generateRandStr(rand(5,20));
-    $random_value1 = self::generateRandStr(rand(40,80));
-    $random_key2 = self::generateRandStr(rand(5,20));
-    $random_value2 = self::generateRandStr(rand(40,80));
+    $random_key1 = generateRandStr(rand(5,20));
+    $random_value1 = generateRandStr(rand(40,80));
+    $random_key2 = generateRandStr(rand(5,20));
+    $random_value2 = generateRandStr(rand(40,80));
     
     $post = array($random_key1=>$random_value1,$random_key2=>$random_value2);
     
@@ -86,8 +85,8 @@ class Api extends PHPUnit_Framework_TestCase {
   }
   
   public function testJonesBigAssTruckRentalAndKeyValueStorage() {  
-    $huge_random_key = self::generateRandStr(128);
-    $huge_random_value = self::generateRandStr(65535);
+    $huge_random_key = generateRandStr(128);
+    $huge_random_value = generateRandStr(65535);
     
     # set
     $url = "http://".$GLOBALS['CONFIG']['api_hostname']."/" . $huge_random_key;
@@ -101,6 +100,23 @@ class Api extends PHPUnit_Framework_TestCase {
     $this->assertEquals($data,$huge_random_value);    
   }
 
+  public function testMySpoonIsTooBig() {  
+    $small_key = generateRandStr(10);
+    $oversize_key = generateRandStr(129);
+    $small_value = generateRandStr(10);
+    $oversize_value = generateRandStr(65537);
+    
+    $url = "http://".$GLOBALS['CONFIG']['api_hostname']."/" . $small_key;
+    $data = self::$browser->getdata($url, array('data' => $oversize_value) );
+    $r = json_decode($data);
+    $this->assertContains("data too big",$r->error);    
+
+    $url = "http://".$GLOBALS['CONFIG']['api_hostname']."/" . $oversize_key;
+    $data = self::$browser->getdata($url, array('data' => $small_value) );
+    $r = json_decode($data);
+    $this->assertContains("invalid_key",$r->error);    
+}
+
   public function testNoKey() {      
     $url = "http://".$GLOBALS['CONFIG']['api_hostname']."/";
     $data = self::$browser->getdata($url);
@@ -110,7 +126,7 @@ class Api extends PHPUnit_Framework_TestCase {
 
   public function testInvalidKey() {      
     # test a bunch with GET
-    foreach (array("bad","invalid!","bad keys are bad","jack+jill")as $key) {
+    foreach (array("bad","invalid!","rok-foobar","bad keys are bad","jack+jill")as $key) {
       $url = "http://".$GLOBALS['CONFIG']['api_hostname']."/".$key;
       $data = self::$browser->getdata($url);
       $r = json_decode($data);
@@ -131,23 +147,28 @@ class Api extends PHPUnit_Framework_TestCase {
     $data = self::$browser->getdata($url);
     $r = json_decode($data);
     $this->assertEquals('phpunit-'.self::$random_key,$r->key);
-    // todo rok
   }  
 
-  private function generateRandStr($length){ 
-    $randstr = ""; 
-    for($i=0; $i<$length; $i++) { 
-       $randnum = mt_rand(0,61); 
-       if($randnum < 10) { 
-          $randstr .= chr($randnum+48); 
-       } else if($randnum < 36) { 
-          $randstr .= chr($randnum+55); 
-       } else { 
-          $randstr .= chr($randnum+61); 
-       }
+  public function testHEAD() {      
+    $url = "/phpunit-" . self::$random_key;
+    $portno = 80;
+    $method = "HEAD";
+    $http_response = "";
+    $http_request .= $method." ".$url ." HTTP/1.1\r\n";
+    $http_request .= "Host: ".$GLOBALS['CONFIG']['api_hostname']."\r\n";
+    $http_request .= "\r\n";
+
+    $fp = fsockopen($GLOBALS['CONFIG']['api_hostname'], $portno, $errno, $errstr);
+    if($fp){
+        fputs($fp, $http_request);
+        while (!feof($fp)) $http_response .= fgets($fp, 128);
+        fclose($fp);
     }
-    return $randstr; 
-  } 
+    $this->assertContains("200 OK",$http_response);
+    # HEAD request shouldn't have the body in it
+    $this->assertEquals(strpos($http_response,self::$random_value),false);
+
+  }  
 
 }
 

@@ -1,11 +1,12 @@
 <?php
 
-include('../config.inc');
-
-global $CONFIG;
-
 class Config extends PHPUnit_Framework_TestCase {
-  
+
+  public function Setup() {
+    global $CONFIG;
+    include('../config.inc');
+  }
+
   public function testHostname() { 
     $this->assertNotEquals(gethostbyname($GLOBALS['CONFIG']['api_hostname']),$GLOBALS['CONFIG']['api_hostname'],"Hostname did not resolve");
   }

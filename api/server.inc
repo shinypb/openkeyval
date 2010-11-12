@@ -1,11 +1,19 @@
 <?php
 
+  global $CONFIG;
+  require_once('../config.inc');
+
   class OpenKeyval {
     const kMaxDataSize = 65536;
     const kReadOnlyKeyPrefix = 'rok-';
 
     public static function Dispatch() {
       self::fixMagicQuotesIfNeccessary();
+
+      if ($_SERVER['REQUEST_METHOD'] == 'HEAD') {
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $GLOBALS['WAS_HEAD'] = true;
+      }
 
       if($_SERVER['REQUEST_METHOD'] == 'GET' && $_SERVER['REQUEST_URI'] == '/') {
         self::Response(400, array('error' => 'no_key_specified'));
@@ -40,11 +48,6 @@
         $command = '';
       }
 
-      if (isset($_REQUEST['key_info'])) {
-        # Mainly used for debugging, but also provides a way to lookup a the read-only key for a given key (without setting)
-        self::Response(200, array('key' => $key, 'hash' => self::HashForKey($key), 'read_only_key' => self::ReadOnlyKey($key)));
-      }
-
       if (strpos($_SERVER['REQUEST_URI'],'/store/')===0) {
         self::HandleBastardSonOfAProtocolJSONP();
       }
@@ -56,6 +59,16 @@
       if(!self::IsValidKey($key)) {
         self::Response(400, array('error' => 'invalid_key'));
       }
+
+      if (isset($_REQUEST['key_info'])) {
+        # Mainly used for debugging, but also provides a way to lookup a the read-only key for a given key (without setting)
+        if(self::IsReadOnlyKey($key)) {
+          self::Response(200, array('read_only_key' => $key));
+        } else {
+          self::Response(200, array('key' => $key, 'hash' => self::HashForKey($key), 'read_only_key' => self::ReadOnlyKey($key)));
+        }
+      }
+
 
       if($_SERVER['REQUEST_METHOD'] == 'GET') {
         self::HandleGET($key, $command);
@@ -158,7 +171,7 @@
     public static function IsValidKey($key) {
       if(self::IsReadOnlyKey($key)) {
         $key = substr($key, strlen(self::kReadOnlyKeyPrefix));
-        return !!preg_match('/^[a-z0-9]$/i', $key);
+        return !!preg_match('/^[a-z0-9]{40}$/i', $key);
       } else {
         return !!preg_match('/^[-_a-z0-9]{5,128}$/i', $key);
       }
@@ -185,16 +198,18 @@
         $body = json_encode($body);
       }
       $content_type = is_null($content_type) ? 'text/plain' : $content_type;
-      echo $body;
+      if (!$GLOBALS['WAS_HEAD']) {
+        echo $body;
+      }
       exit;
     }
 
     protected static function Salt() {
       static $salt = null;
       if(is_null($salt)) {
-        $filename = dirname(__FILE__) . '/../salt.txt';
+        $filename = $GLOBALS['CONFIG']['dir'] . '/' . 'salt.txt';
         if(!file_exists($filename)) {
-          die("Missing salt file (salt.txt in the same directory as this script).");
+          die("Missing salt file (salt.txt in ".$GLOBALS['CONFIG']['dir'].").");
         }
         $salt = trim(file_get_contents($filename));
       }
@@ -212,7 +227,7 @@
 
   class OpenKeyval_Storage {
     protected function PathForHash($hash) {
-      $dirname = '../data/' . substr($hash, 0, 2) . '/'  . substr($hash, 2, 2) . '/'  . substr($hash, 4, 2) . '/'  . substr($hash, 6, 2);
+      $dirname = $GLOBALS['CONFIG']['data_dir'] . '/' . substr($hash, 0, 2) . '/'  . substr($hash, 2, 2) . '/'  . substr($hash, 4, 2) . '/'  . substr($hash, 6, 2);
 
       if(!file_exists($dirname)) {
         mkdir($dirname, 0777, $recursive = true);
@@ -283,6 +298,7 @@
       }
 
       self::GetHandle()->delete($key);
+      self::GetHandle()->delete(OpenKeyval::kReadOnlyKeyPrefix.OpenKeyval::HashForKey($key));
       return parent::Delete($key);
     }
 
@@ -327,5 +343,20 @@
       return $rv;
     }
   }
+
+  function generateRandStr($length){ 
+    $randstr = ""; 
+    for($i=0; $i<$length; $i++) { 
+       $randnum = mt_rand(0,61); 
+       if($randnum < 10) { 
+          $randstr .= chr($randnum+48); 
+       } else if($randnum < 36) { 
+          $randstr .= chr($randnum+55); 
+       } else { 
+          $randstr .= chr($randnum+61); 
+       }
+    }
+    return $randstr; 
+  } 
 
 ?>
