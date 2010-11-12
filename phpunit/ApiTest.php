@@ -154,7 +154,7 @@ class Api extends PHPUnit_Framework_TestCase {
     $portno = 80;
     $method = "HEAD";
     $http_response = "";
-    $http_request .= $method." ".$url ." HTTP/1.1\r\n";
+    $http_request = $method." ".$url ." HTTP/1.1\r\n";
     $http_request .= "Host: ".$GLOBALS['CONFIG']['api_hostname']."\r\n";
     $http_request .= "\r\n";
 
