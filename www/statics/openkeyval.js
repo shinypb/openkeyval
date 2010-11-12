@@ -32,7 +32,7 @@ var OpenKeyval = {
   console: {},
   memoizedData: {},
   shouldMemoize: true,
-  server: 'http://openkeyval.org/',
+  server: 'http://api.openkeyval.org/',
 
   setDebugMode: function(value) {
     if(value) {

@@ -1,9 +1,9 @@
 <?
 
 $GLOBALS['CONFIG'] = Array(
-  'api_hostname' => 'api.brian.openkeyval.org',
-  'dir' => '/home/dustball/openkeyval',
-  'data_dir' => '/home/dustball/openkeyval/data',
+  'api_hostname' => 'localhost',
+  'dir' => '/var/openkeyval',
+  'data_dir' => '/var/openkeyval/data',
 );
 
 ?>
