@@ -2,6 +2,8 @@
 <html>
   <head>
     <title>Notes</title>
+    <link href='http://fonts.googleapis.com/css?family=Molengo&subset=latin' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Reenie+Beanie&subset=latin' rel='stylesheet' type='text/css'>
     <style>
       html {
         height: 100%;
@@ -19,10 +21,56 @@
         width: 100%;
       }
 
+      #header {
+        background: #505455;
+        border-bottom: 1px solid #ccf;
+        display: block;
+        height: 48px;
+        line-height: 48px;
+        width: 100%;
+      }
+
+      #header a {
+        color: #fff;
+      }
+
+      #toolbar {
+        float: right;
+        margin-right: 0.5em;
+      }
+
+
+      #header h1, #header h2 {
+        display: inline-block;
+        margin: 0;
+      }
+
+      #header h1 {
+        color: #eee;
+        font-family: 'Reenie Beanie';
+        font-size: 32px;
+        margin: 0 10px;
+        text-transform: uppercase;
+      }
+
+      #header h2:before {
+        content: '(';
+      }
+
+      #header h2:after {
+        content: ')';
+      }
+
+      #header h2 {
+        color: #ddd;
+        font-family: molengo;
+        font-size: 14px;
+      }
+
       #contents {
         padding: 0;
-        top: 0;
-        bottom: 35px;
+        top: 48px;
+        bottom: 0;
         list-style: none;
         margin: 0;
         overflow-x: hidden;
@@ -53,28 +101,15 @@
         font-weight: bold;
       }
 
-      #toolbar {
-        background: #eef;
-        border-top: 1px solid #ccf;
-        padding: 0 0.5em;
-        bottom: 0;
-        height: 35px;
-        line-height: 35px;
-        text-align: right;
-        position: fixed;
-        left: 0;
-        right: 0;
-      }
-
       #text {
         border: 0;
-        font-family: sans-serif;
-        font-size: 1em;
+        font-family: 'reenie beanie', sans-serif;
+        font-size: 30px;
         position: fixed;
         left: 200px;
-        top: 0;
+        top: 48px;
         bottom: 35px;
-        padding: 1em;
+        padding: 10px;
         right: 0;
       }
 
@@ -91,16 +126,20 @@
     </div>
 
     <div id="main">
-      <ul id="contents">
-      </ul>
+      <div id="header">
+        <h1>Notes</h1>
+        <h2>An <a href="http://openkeyval.org/">OpenKeyval.org</a> sample project</h2>
+
+        <div id="toolbar">
+          <input type="button" id="new_note" value="New note" />
+          <input type="button" id="delete_note" value="Delete note" />
+          <input type="button" id="save_note" value="Save note" />
+        </div>
+      </div>
+
+      <ul id="contents"></ul>
 
       <textarea id="text"></textarea>
-
-      <div id="toolbar">
-        <input type="button" id="new_note" value="New note" />
-        <input type="button" id="delete_note" value="Delete note" />
-        <input type="button" id="save_note" value="Save note" />
-      </div>
     </div>
   </body>
 
@@ -110,6 +149,9 @@
   <script src="sha1.js"></script>
 
   <script>
+
+
+
     var OpenKeyvalNotes = {
       notes: null,
       password: null,
