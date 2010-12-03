@@ -150,43 +150,108 @@
 
   <script>
 
-
-
-    var OpenKeyvalNotes = {
-      notes: null,
+    var OKVNotes = {
+      notes: {},
+      noteTitles: null,
       password: null,
-      noteData: {},
+
+      exists: function(title) {
+        return OKVNotes.noteTitles.indexOf(title) >= 0;
+      },
+
+      get: function(title, callback) {
+        if(OKVNotes.notes[title]) {
+          return callback(title, OKVNotes.notes[title]);
+        }
+
+        console.log('Fetching note:', title);
+        window.remoteStorage.getItem(NotesApp.key('note:' + title), function(data) {
+          OKVNotes.notes[title] = data ? JSON.parse(data).data : '';
+          callback(title, OKVNotes.notes[title]);
+        });
+      },
+
+      index: function(callback) {
+        if(OKVNotes.notesTitles) {
+          return callback(OKVNotes.notes);
+        }
+
+        console.log('Fetching note list');
+        window.remoteStorage.getItem(NotesApp.key('notes'), function(data) {
+          console.log(data);
+          OKVNotes.noteTitles = data ? JSON.parse(data).sort() : [];
+          console.log(OKVNotes.noteTitles);
+          callback(OKVNotes.noteTitles);
+        });
+      },
+
+      remove: function(title, callback) {
+        OKVNotes.set(title, null, function() {
+          delete OKVNotes.notes[title];
+          console.log('Removing ' + title);
+          var i = OKVNotes.noteTitles.indexOf(title);
+          OKVNotes.noteTitles.remove(i);
+          OKVNotes.saveIndex();
+
+          callback.apply(arguments);
+        });
+      },
+
+      saveIndex: function() {
+        window.remoteStorage.setItem(NotesApp.key('notes'), JSON.stringify(OKVNotes.noteTitles));
+      },
+
+      set: function(title, data, callback) {
+        if(title !== null && OKVNotes.noteTitles.indexOf(title) < 0) {
+          OKVNotes.noteTitles.push(title);
+          OKVNotes.saveIndex();
+        }
+        OKVNotes.notes[title] = data;
+        var data = { title: title, data: data };
+        console.log('Saving ', data, ' to ', title);
+        window.remoteStorage.setItem(NotesApp.key('note:' + title), JSON.stringify(data), callback);
+      }
+    };
+
+    var NotesApp = {
       currentNote: null,
 
       didReceiveNote: function(data) {
         var note = JSON.parse(data);
         console.log(note);
-        OpenKeyvalNotes.noteData[note.name] = note.text;
-        OpenKeyvalNotes.displayNote(note.name);
+        NotesApp.noteData[note.name] = note.data;
+        NotesApp.displayNote(note.name);
       },
 
-      didReceiveNotesList: function(data) {
-        console.log(data);
-        OpenKeyvalNotes.notes = data ? JSON.parse(data) : null;
-        OpenKeyvalNotes.notes = OpenKeyvalNotes.notes.sort() || {};
-        console.log(OpenKeyvalNotes.notes);
+      selectNote: function(title) {
+        NotesApp.currentNote = title;
+        if(title === null) {
+          NotesApp.displayNote(null, '')
+        } else {
+          $('#text').attr('disabled', false).val('');
+          OKVNotes.get(title, NotesApp.displayNote);
+        }
+      },
 
-        if(OpenKeyvalNotes.notes.length > 0) {
-          OpenKeyvalNotes.currentNote = OpenKeyvalNotes.notes[0];
-          OpenKeyvalNotes.fetchNote(OpenKeyvalNotes.currentNote);
+      didReceiveNotesList: function(noteTitles) {
+        console.log('got muh note titles');
+        console.log(noteTitles);
+        if(noteTitles.length > 0) {
+          //  Select the first note
+          NotesApp.selectNote(noteTitles[0]);
         }
 
-        OpenKeyvalNotes.refreshNotesList();
+        NotesApp.refreshNotesList();
         $('#main').show();
       },
 
       refreshNotesList: function() {
-        console.log(OpenKeyvalNotes.currentNote);
+        console.log('Current note is', NotesApp.currentNote);
         $('#contents').html('');
-        $(OpenKeyvalNotes.notes).each(function(i, value) {
+        $(OKVNotes.noteTitles).each(function(i, value) {
           var link = $('<a>').html(value).attr('href', '#');
           var item = $('<li />').html(link);
-          if(value === OpenKeyvalNotes.currentNote) {
+          if(value === NotesApp.currentNote) {
             item.addClass('selected');
           }
 
@@ -194,73 +259,70 @@
         });
       },
 
-      storeNote: function(name, text, callback) {
-        OpenKeyvalNotes.noteData[name] = text;
-        var data = { name: name, text: text };
-        window.remoteStorage.setItem(OpenKeyvalNotes.key('note:' + name), JSON.stringify(data), callback);
-      },
-
       storeNotesList: function() {
-        window.remoteStorage.setItem(OpenKeyvalNotes.key('notes'), JSON.stringify($.unique(OpenKeyvalNotes.notes).sort()));
+        window.remoteStorage.setItem(NotesApp.key('notes'), JSON.stringify($.unique(NotesApp.notes).sort()));
       },
 
       key: function(key) {
-        return 'openkeyvalnotes-' + SHA1(OpenKeyvalNotes.password + key);
+        return 'openkeyvalnotes-' + SHA1(NotesApp.password + key);
       },
 
       init: function() {
-        $('#login_button').click(OpenKeyvalNotes.onLoginButtonClick);
-        $('#new_note').click(OpenKeyvalNotes.onNewNoteClick);
-        $('#delete_note').click(OpenKeyvalNotes.onDeleteNoteClick);
-        $('#save_note').click(OpenKeyvalNotes.onSaveNoteClick);
-        $('#contents').click(OpenKeyvalNotes.onNoteClick);
+        $('#login_button').click(NotesApp.onLoginButtonClick);
+        $('#new_note').click(NotesApp.onNewNoteClick);
+        $('#delete_note').click(NotesApp.onDeleteNoteClick);
+        $('#save_note').click(NotesApp.onSaveNoteClick);
+        $('#contents').click(NotesApp.onNoteClick);
 
-        OpenKeyvalNotes.password = 'test';
-        OpenKeyvalNotes.onLoginButtonClick();
+        // Array Remove - By John Resig (MIT Licensed)
+        Array.prototype.remove = function(from, to) {
+          var rest = this.slice((to || from) + 1 || this.length);
+          this.length = from < 0 ? this.length + from : from;
+          return this.push.apply(this, rest);
+        };
+
+        NotesApp.password = 'test';
+        NotesApp.onLoginButtonClick();
       },
 
       onDeleteNoteClick: function(e) {
-        if(!confirm("Are you sure you want to remove '" + OpenKeyvalNotes.currentNote + "'? This can't be undone.")) {
+        if(!confirm("Are you sure you want to remove '" + NotesApp.currentNote + "'? This can't be undone.")) {
           return;
         }
 
-        var i = OpenKeyvalNotes.notes.indexOf(OpenKeyvalNotes.currentNote);
-        delete OpenKeyvalNotes.noteData[OpenKeyvalNotes.currentNote];
-        OpenKeyvalNotes.notes = OpenKeyvalNotes.notes.slice(0, i).concat(OpenKeyvalNotes.notes.slice(i + 1));
-        OpenKeyvalNotes.storeNote(OpenKeyvalNotes.currentNote, null);
-        OpenKeyvalNotes.storeNotesList();
-        OpenKeyvalNotes.currentNote = (OpenKeyvalNotes.notes.length > 0) ? OpenKeyvalNotes.notes[0] : null;
-        OpenKeyvalNotes.displayNote(OpenKeyvalNotes.currentNote);
-        OpenKeyvalNotes.refreshNotesList();
+        OKVNotes.remove(NotesApp.currentNote, function() {
+          NotesApp.selectNote((OKVNotes.noteTitles.length > 0) ? OKVNotes.noteTitles[0] : null);
+          NotesApp.refreshNotesList();
+        });
       },
 
       onSaveNoteClick: function(e) {
-        OpenKeyvalNotes.storeNote(OpenKeyvalNotes.currentNote, $('#text').val(), function() {
+        console.log('Saving', NotesApp.currentNote);
+        OKVNotes.set(NotesApp.currentNote, $('#text').val(), function() {
+          console.log('Save done', arguments);
           $(e.target).attr('disabled', false);
         });
       },
 
       onLoginButtonClick: function() {
         $('#login_container').hide();
-        OpenKeyvalNotes.password = $('#password').val();
-        OpenKeyvalNotes.fetchNotesList();
+        NotesApp.password = $('#password').val();
+        NotesApp.fetchNotesList();
       },
 
       onNewNoteClick: function() {
-        var name = prompt('Create a new note called:').trim();
-        if(!name) {
+        var title = prompt('Create a new note called:').trim();
+        if(!title) {
           return;
         }
 
-        if(OpenKeyvalNotes.notes.indexOf(name) < 0) {
+        if(!OKVNotes.exists(title)) {
           //  Note doesn't exist; create it
-          OpenKeyvalNotes.notes.push(name);
-          OpenKeyvalNotes.storeNotesList();
-          OpenKeyvalNotes.storeNote(name, 'This is a new note');
+          OKVNotes.set(title, "This is a new note called '" + title + "'", function() {
+            NotesApp.selectNote(title);
+            NotesApp.refreshNotesList();
+          });
         }
-
-        OpenKeyvalNotes.displayNote(name);
-        OpenKeyvalNotes.refreshNotesList();
       },
 
       onNoteClick: function(e) {
@@ -274,34 +336,25 @@
         $('#contents .selected').removeClass('selected');
         $(e.target).parent().addClass('selected');
 
-        var name = e.target.innerText;
-        if(OpenKeyvalNotes.notes[name]) {
-          OpenKeyvalNotes.displayNote(name);
-        } else {
-          $('#text').html('');
-          $('#text').attr('disabled', true);
-          OpenKeyvalNotes.fetchNote(name);
-        }
+        var title = e.target.innerText;
+        $('#text').html('');
+        $('#text').attr('disabled', true);
+
+        OKVNotes.get(title, NotesApp.displayNote);
       },
 
       fetchNotesList: function() {
-        console.log('Fetching note list');
-        window.remoteStorage.getItem(OpenKeyvalNotes.key('notes'), OpenKeyvalNotes.didReceiveNotesList);
+        OKVNotes.index(NotesApp.didReceiveNotesList);
       },
 
-      fetchNote: function(name) {
-        console.log('Fetching', name);
-        window.remoteStorage.getItem(OpenKeyvalNotes.key('note:' + name), OpenKeyvalNotes.didReceiveNote);
-      },
-
-      displayNote: function(name) {
-        OpenKeyvalNotes.currentNote = name;
-        console.log(name);
-        console.log(OpenKeyvalNotes.noteData[name]);
+      displayNote: function(title, data) {
+        NotesApp.currentNote = title;
+        console.log(title);
+        console.log(data);
         $('#text').attr('disabled', false);
-        $('#text').html(OpenKeyvalNotes.noteData[name]);
+        $('#text').html(data);
       },
     };
-    $(document).ready(OpenKeyvalNotes.init);
+    $(document).ready(NotesApp.init);
   </script>
 </html>
