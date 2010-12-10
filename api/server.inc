@@ -10,8 +10,6 @@
     public static function Dispatch() {
       self::fixMagicQuotesIfNeccessary();
       
-      self::throttle();
-
       if ($_SERVER['REQUEST_METHOD'] == 'HEAD') {
         $_SERVER['REQUEST_METHOD'] = 'GET';
         $GLOBALS['WAS_HEAD'] = true;
@@ -31,6 +29,7 @@
 
         $key_map = array();
         foreach ($_POST as $key=>$value) {
+          self::throttle("write");
           self::HandlePOST($key,$value);
           $key_map[$key] = self::ReadOnlyKey($key);
         }
@@ -73,31 +72,38 @@
 
 
       if($_SERVER['REQUEST_METHOD'] == 'GET') {
+        self::throttle("read");
         self::HandleGET($key, $command);
       } else {
+        self::throttle("write");
         self::HandlePOST($key, $_POST['data']);
         self::Response(200, array('status' => 'set', 'key' => $key, 'read_only_key' => self::ReadOnlyKey($key)));
       }
     }
     
-    private function throttle() {
+    private function throttle($type="read") {
       OpenKeyval_Storage_Cached::Get($key);
       
       $ip = $_SERVER['REMOTE_ADDR']; 
       $currentTimeChunk = ceil(time()/60/60)*60*60;
-      $key = 'internal-throttle-' . $ip . '-' . $currentTimeChunk;
+      $key = 'internal-throttle-' . $ip . '-' . '-' . $type . '-' . $currentTimeChunk;
       
       $memcache = GetMemcacheHandle();
       
       $currentLimit = $memcache->get($key)*1;
-      $maxLimit = 200;
+      
+      if ($type == "read") {
+        $maxLimit = 1000;
+      } else {
+        $maxLimit = 100;
+      }        
 
       $expire = $currentTimeChunk-time();
             
       $memcache->set($key,$currentLimit+1,false,$expire);
 
       if ($currentLimit>$maxLimit) {
-        self::Response(400, array('error' => 'API usage limit exceeded; exceeded hourly quota','requestsInPeriodSoFar'=>$currentLimit,'quota'=>$maxLimit,'periodCountdown'=>$expire));
+        self::Response(400, array('error' => 'API usage limit exceeded; exceeded hourly quota','throttleType'=>$type,'requestsInPeriodSoFar'=>$currentLimit,'quota'=>$maxLimit,'periodCountdown'=>$expire));
       } 
       
     }
@@ -130,6 +136,7 @@
       $key_map = array();
       foreach ($_GET as $key=>$value) {
         if ($key != self::determineJSONPCallback()) {
+          self::throttle("write");        
           self::HandlePOST($key, $value);
           $key_map[$key] = self::ReadOnlyKey($key);
         }
