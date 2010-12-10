@@ -108,9 +108,14 @@
         position: fixed;
         left: 200px;
         top: 48px;
-        bottom: 35px;
+        bottom: 0;
         padding: 10px;
+        resize: none;
         right: 0;
+      }
+
+      #text:disabled {
+        background: #ddd;
       }
 
       #text:focus {
@@ -139,7 +144,7 @@
 
       <ul id="contents"></ul>
 
-      <textarea id="text"></textarea>
+      <textarea id="text" disabled></textarea>
     </div>
   </body>
 
@@ -178,8 +183,15 @@
 
         console.log('Fetching note list');
         window.remoteStorage.getItem(NotesApp.key('notes'), function(data) {
-          console.log(data);
-          OKVNotes.noteTitles = data ? JSON.parse(data).sort() : [];
+          if(data) {
+            try {
+              OKVNotes.noteTitles = JSON.parse(data).sort();
+            } catch (e) {
+              OKVNotes.noteTitles = [];
+            }
+          } else {
+            OKVNotes.noteTitles = [];
+          }
           console.log(OKVNotes.noteTitles);
           callback(OKVNotes.noteTitles);
         });
