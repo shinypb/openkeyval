@@ -85,6 +85,12 @@
       OpenKeyval_Storage_Cached::Get($key);
       
       $ip = $_SERVER['REMOTE_ADDR']; 
+      
+      # Dirty hack for time being
+      if ($ip == "184.72.10.139") {
+        return;
+      }
+
       $currentTimeChunk = ceil(time()/60/60)*60*60;
       $key = 'internal-throttle-' . $ip . '-' . '-' . $type . '-' . $currentTimeChunk;
       
