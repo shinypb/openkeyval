@@ -1,4 +1,5 @@
 RewriteEngine On
 RewriteRule ^(aw)?stats/$ http://openkeyval.org/awstats/awstats.pl [R=301,L]
 RewriteRule ^statics/(.*)$ statics/$1 [L]
+RewriteRule ^crossdomain.xml$ crossdomain.xml [L]
 RewriteRule ^(.*)$ index.php?key=$1 [QSA,L]
