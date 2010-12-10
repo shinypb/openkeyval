@@ -179,6 +179,11 @@
 
     public static function Response($http_code, $body, $content_type = null, $key="") {
       $jsonp = self::determineJSONPCallback();
+      if ($http_code==404 && $jsonp) {
+        # Yuck
+        $body = null;
+        $http_code = 200;
+      }
       if (isset($jsonp)) {
         $content_type = "text/javascript";
         $command = "";
