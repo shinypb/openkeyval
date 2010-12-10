@@ -22,7 +22,7 @@ class Jsonp extends PHPUnit_Framework_TestCase {
     
   public function testJsonpSet() {      
     $callback = generateRandStr(10);
-    $url = "http://".$GLOBALS['CONFIG']['api_hostname']."/store/?jsonp_callback=".$callback."&".self::$random_key."=".self::$random_value;
+    $url = (isset($GLOBALS['CONFIG']['ssl'])?"https://":"http://").$GLOBALS['CONFIG']['api_hostname']."/store/?jsonp_callback=".$callback."&".self::$random_key."=".self::$random_value;
     $data = self::$browser->getdata($url);
     $left = substr($data,0,strlen($callback)+1);
     $mid = substr($data,strlen($callback)+1,strlen($data)-strlen($callback)-6);
@@ -36,7 +36,7 @@ class Jsonp extends PHPUnit_Framework_TestCase {
 
   public function testGet() {      
     $callback = generateRandStr(10);
-    $url = "http://".$GLOBALS['CONFIG']['api_hostname']."/".self::$random_key."?jsonp_callback=".$callback;
+    $url = (isset($GLOBALS['CONFIG']['ssl'])?"https://":"http://").$GLOBALS['CONFIG']['api_hostname']."/".self::$random_key."?jsonp_callback=".$callback;
     $data = self::$browser->getdata($url);
     
     $left = substr($data,0,strlen($callback)+1);
