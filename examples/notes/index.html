@@ -15,6 +15,10 @@
         margin: 0;
       }
 
+      body.logged_out {
+        background: -webkit-gradient(radial, 50% 100%, 500, 50% 100%, 100, from(#101112), to(#303233), color-stop(.6, #202223));
+      }
+
       #main {
         display: none;
         height: 100%;
@@ -23,6 +27,7 @@
 
       #header {
         background: #505455;
+        background: -webkit-gradient(radial, 0% -50%, 500, 0 25%, 100, from(#505455), to(#505455), color-stop(.6, #202223));
         border-bottom: 1px solid #ccf;
         display: block;
         height: 48px;
@@ -51,6 +56,11 @@
         font-size: 32px;
         margin: 0 10px;
         text-transform: uppercase;
+      }
+
+      #header h1 span {
+        font-size: 0.5em;
+        margin-left: 0.25em;
       }
 
       #header h2:before {
@@ -121,18 +131,100 @@
       #text:focus {
         outline: none;
       }
+
+      #login_container {
+        height: 180px;
+        width: 350px;
+      }
+
+      #loading {
+        display: none;
+        height: 60px;
+        width: 350px;
+      }
+
+      .dialog {
+        background: #eee1e2;
+        border-radius: 10px;
+        -webkit-box-shadow: 0 0 100px rgba(255, 255, 255, 0.4);
+        left: 50%;
+        margin: -120px 0 0 -175px;
+        padding: 20px;
+        position: absolute;
+        top: 50%;
+      }
+
+      .dialog p {
+        font-size: 14px;
+      }
+
+      .dialog p.first {
+        background: #6fa4db;
+        background: -webkit-gradient(
+            linear,
+            left bottom,
+            left top,
+            color-stop(0.03, rgb(45,110,185)),
+            color-stop(0.52, rgb(111,163,219))
+        );
+        background: -moz-linear-gradient(
+            center bottom,
+            rgb(45,110,185) 3%,
+            rgb(111,163,219) 52%
+        );
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+        color: #eaeaea;
+        margin: -20px;
+        padding: 10px 20px;
+        margin-bottom: 20px;
+        text-shadow: #222222 0 0 2px;
+      }
+
+      .dialog p {
+        margin-top: 0;
+      }
+
+      #password {
+        font-size: 20px;
+        line-height: 20px;
+        width: 280px;
+      }
+
+      #login_button {
+        font-size: 35px;
+        margin-bottom: 20px;
+      }
+
+      #ps {
+        color: #555;
+        font-size: 0.8em;
+      }
+
+      #ps a {
+        color: #555;
+      }
     </style>
   </head>
 
-  <body>
-    <div id="login_container">
-      <input type="password" id="password" />
-      <input type="button" id="login_button" value="Log in" />
+  <body class="logged_out">
+    <div id="loading" class="dialog">
+      <p class="first"><strong>Notes&#x2665;</strong> loves you.</p>
+      <p>Please wait while your notes load...</p>
     </div>
+
+    <form id="login_container" class="dialog">
+      <p class="first">Welcome to <strong>Notes<span>&#x2665;</span></strong>.</p>
+      <p>Enter your password. If this is your first time here, just make up a password &mdash; you don't have to sign up first.</p>
+        <input type="password" id="password" autofocus placeholder="password" />
+        <input type="submit" id="login_button" value="Log in" />
+      <p id="ps">PS: Your notes will be stored on <a href="http://openkeyval.org">OpenKeyval.org</a>.
+         This is just an example application to demonstrate OpenKeyval &mdash we don't make any privacy guarantees about your data.</p>
+    </form>
 
     <div id="main">
       <div id="header">
-        <h1>Notes</h1>
+        <h1>Notes<span>&#x2665;</span></h1>
         <h2>An <a href="http://openkeyval.org/">OpenKeyval.org</a> sample project</h2>
 
         <div id="toolbar">
@@ -171,7 +263,15 @@
 
         console.log('Fetching note:', title);
         window.remoteStorage.getItem(NotesApp.key('note:' + title), function(data) {
-          OKVNotes.notes[title] = data ? JSON.parse(data).data : '';
+          if(data !== null) {
+            OKVNotes.notes[title] = JSON.parse(data).data;
+          } else {
+            if(title == 'Example Note') {
+              OKVNotes.notes[title] = 'Welcome to Notes\u2665!\n--------------------------------\nThis is your first note. Use the buttons in the top right to work with your notes.';
+            } else {
+              OKVNotes.notes[title] = 'Whoops, unable to load that note.'
+            }
+          }
           callback(title, OKVNotes.notes[title]);
         });
       },
@@ -190,7 +290,7 @@
               OKVNotes.noteTitles = [];
             }
           } else {
-            OKVNotes.noteTitles = [];
+            OKVNotes.noteTitles = ['Example Note'];
           }
           console.log(OKVNotes.noteTitles);
           callback(OKVNotes.noteTitles);
@@ -246,6 +346,7 @@
       },
 
       didReceiveNotesList: function(noteTitles) {
+        $(document.body).removeClass('logged_out');
         console.log('got muh note titles');
         console.log(noteTitles);
         if(noteTitles.length > 0) {
@@ -280,6 +381,7 @@
       },
 
       init: function() {
+        $('#login_container').submit(function(e) { e.preventDefault(); });
         $('#login_button').click(NotesApp.onLoginButtonClick);
         $('#new_note').click(NotesApp.onNewNoteClick);
         $('#delete_note').click(NotesApp.onDeleteNoteClick);
@@ -292,9 +394,6 @@
           this.length = from < 0 ? this.length + from : from;
           return this.push.apply(this, rest);
         };
-
-        NotesApp.password = 'test';
-        NotesApp.onLoginButtonClick();
       },
 
       onDeleteNoteClick: function(e) {
@@ -317,8 +416,14 @@
       },
 
       onLoginButtonClick: function() {
+        var password = $('#password').val().trim();
+        if(password.length < 8) {
+          return alert('Please enter a password that is at least 8 characters long.');
+        }
         $('#login_container').hide();
+        $('#loading').show();
         NotesApp.password = $('#password').val();
+
         NotesApp.fetchNotesList();
       },
 
