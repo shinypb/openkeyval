@@ -329,8 +329,8 @@
         return parent::Delete($key);
       }
 
-      GetMemcacheHandle()->delete($key);
-      GetMemcacheHandle()->delete(OpenKeyval::kReadOnlyKeyPrefix.OpenKeyval::HashForKey($key));
+      GetMemcacheHandle()->set($key,null,0);
+      GetMemcacheHandle()->set(OpenKeyval::kReadOnlyKeyPrefix.OpenKeyval::HashForKey($key),null,0);
       return parent::Delete($key);
     }
 
@@ -369,8 +369,8 @@
         GetMemcacheHandle()->set(OpenKeyval::kReadOnlyKeyPrefix . $hash, serialize($value));
       } else {
         //  weird, set failed
-        GetMemcacheHandle()->delete($key);
-        GetMemcacheHandle()->delete(OpenKeyval::kReadOnlyKeyPrefix . $hash);
+        GetMemcacheHandle()->set($key,null,0);
+        GetMemcacheHandle()->set(OpenKeyval::kReadOnlyKeyPrefix . $hash,null,0);
       }
       return $rv;
     }
