@@ -9,6 +9,8 @@
 
     public static function Dispatch() {
       self::fixMagicQuotesIfNeccessary();
+      
+      self::throttle();
 
       if ($_SERVER['REQUEST_METHOD'] == 'HEAD') {
         $_SERVER['REQUEST_METHOD'] = 'GET';
@@ -76,6 +78,28 @@
         self::HandlePOST($key, $_POST['data']);
         self::Response(200, array('status' => 'set', 'key' => $key, 'read_only_key' => self::ReadOnlyKey($key)));
       }
+    }
+    
+    private function throttle() {
+      OpenKeyval_Storage_Cached::Get($key);
+      
+      $ip = $_SERVER['REMOTE_ADDR']; 
+      $currentTimeChunk = ceil(time()/60/60)*60*60;
+      $key = 'internal-throttle-' . $ip . '-' . $currentTimeChunk;
+      
+      $memcache = GetMemcacheHandle();
+      
+      $currentLimit = $memcache->get($key)*1;
+      $maxLimit = 200;
+
+      $expire = $currentTimeChunk-time();
+            
+      $memcache->set($key,$currentLimit+1,false,$expire);
+
+      if ($currentLimit>$maxLimit) {
+        self::Response(400, array('error' => 'API usage limit exceeded; exceeded hourly quota','requestsInPeriodSoFar'=>$currentLimit,'quota'=>$maxLimit,'periodCountdown'=>$expire));
+      } 
+      
     }
 
     private function fixMagicQuotesIfNeccessary() {
@@ -285,35 +309,25 @@
 
   class OpenKeyval_Storage_Cached extends OpenKeyval_Storage {
     protected static $handle;
-    protected function GetHandle() {
-      if(!class_exists('Memcache')) {
-        return false;
-      }
-      if(is_null(self::$handle)) {
-        self::$handle = new Memcache();
-        self::GetHandle()->connect('localhost', 11211) or self::$handle = false;
-      }
-      return self::$handle;
-    }
 
     public static function Delete($key) {
-      if(!self::GetHandle()) {
+      if(!GetMemcacheHandle()) {
         //  Memcache down?
         return parent::Delete($key);
       }
 
-      self::GetHandle()->delete($key);
-      self::GetHandle()->delete(OpenKeyval::kReadOnlyKeyPrefix.OpenKeyval::HashForKey($key));
+      GetMemcacheHandle()->delete($key);
+      GetMemcacheHandle()->delete(OpenKeyval::kReadOnlyKeyPrefix.OpenKeyval::HashForKey($key));
       return parent::Delete($key);
     }
 
     public static function Get($key) {
-      if(!self::GetHandle()) {
+      if(!GetMemcacheHandle()) {
         //  Memcache down?
         return parent::Get($key);
       }
 
-      if($value = self::GetHandle()->get($key)) {
+      if($value = GetMemcacheHandle()->get($key)) {
         $raw_value = unserialize($value);
         if ($raw_value != null) {
           // Not sure why there are NULLs in the cache, but there are.  TODO: Fix root cause.
@@ -323,13 +337,13 @@
 
       //  not in cache
       $value = parent::Get($key);
-      self::GetHandle()->set($key, serialize($value));
+      GetMemcacheHandle()->set($key, serialize($value));
 
       return $value;
     }
 
     public static function Set($key, $value) {
-      if(!self::GetHandle()) {
+      if(!GetMemcacheHandle()) {
         //  Memcache down?
         return parent::Set($key, $value);
       }
@@ -338,12 +352,12 @@
 
       $rv = parent::Set($key, $value);
       if($rv) {
-        self::GetHandle()->set($key, serialize($value));
-        self::GetHandle()->set(OpenKeyval::kReadOnlyKeyPrefix . $hash, serialize($value));
+        GetMemcacheHandle()->set($key, serialize($value));
+        GetMemcacheHandle()->set(OpenKeyval::kReadOnlyKeyPrefix . $hash, serialize($value));
       } else {
         //  weird, set failed
-        self::GetHandle()->delete($key);
-        self::GetHandle()->delete(OpenKeyval::kReadOnlyKeyPrefix . $hash);
+        GetMemcacheHandle()->delete($key);
+        GetMemcacheHandle()->delete(OpenKeyval::kReadOnlyKeyPrefix . $hash);
       }
       return $rv;
     }
@@ -364,4 +378,16 @@
     return $randstr; 
   } 
 
+  function GetMemcacheHandle() {
+    static $handle;
+    if(!class_exists('Memcache')) {
+      return false;
+    }
+    if(is_null($handle)) {
+      $handle = new Memcache();
+      $handle->connect('localhost', 11211) or $handle = false;
+    }
+    return $handle;
+  }
+    
 ?>
