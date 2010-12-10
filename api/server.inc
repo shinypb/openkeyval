@@ -85,6 +85,12 @@
       OpenKeyval_Storage_Cached::Get($key);
       
       $ip = $_SERVER['REMOTE_ADDR']; 
+      
+      # Dirty hack for time being
+      if ($ip == "184.72.10.139") {
+        return;
+      }
+
       $currentTimeChunk = ceil(time()/60/60)*60*60;
       $key = 'internal-throttle-' . $ip . '-' . '-' . $type . '-' . $currentTimeChunk;
       
@@ -323,8 +329,8 @@
         return parent::Delete($key);
       }
 
-      GetMemcacheHandle()->delete($key);
-      GetMemcacheHandle()->delete(OpenKeyval::kReadOnlyKeyPrefix.OpenKeyval::HashForKey($key));
+      GetMemcacheHandle()->set($key,null,0);
+      GetMemcacheHandle()->set(OpenKeyval::kReadOnlyKeyPrefix.OpenKeyval::HashForKey($key),null,0);
       return parent::Delete($key);
     }
 
@@ -363,8 +369,8 @@
         GetMemcacheHandle()->set(OpenKeyval::kReadOnlyKeyPrefix . $hash, serialize($value));
       } else {
         //  weird, set failed
-        GetMemcacheHandle()->delete($key);
-        GetMemcacheHandle()->delete(OpenKeyval::kReadOnlyKeyPrefix . $hash);
+        GetMemcacheHandle()->set($key,null,0);
+        GetMemcacheHandle()->set(OpenKeyval::kReadOnlyKeyPrefix . $hash,null,0);
       }
       return $rv;
     }
