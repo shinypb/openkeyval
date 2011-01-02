@@ -162,7 +162,7 @@ class Api extends PHPUnit_Framework_TestCase {
     $http_request .= "Host: ".$GLOBALS['CONFIG']['api_hostname']."\r\n";
     $http_request .= "\r\n";
 
-    $fp = fsockopen($GLOBALS['CONFIG']['api_hostname'], $portno, $errno, $errstr);
+    $fp = fsockopen((isset($GLOBALS['CONFIG']['ssl'])?"ssl://":"").$GLOBALS['CONFIG']['api_hostname'], $portno, $errno, $errstr);
     if($fp){
         fputs($fp, $http_request);
         while (!feof($fp)) $http_response .= fgets($fp, 128);
