@@ -379,7 +379,6 @@
     }
   
     private function wrapKeyForMemcache($key) {
-      return $key;
       $namespace = $GLOBALS['CONFIG']['api_hostname'];
       return $namespace . kCacheVersion . "-" . $key;
     }
