@@ -86,7 +86,7 @@
     <div id="header">
       <div id="intro">
         <img src="http://cdn.openkeyval.org/statics/logo.png" alt="" align="right" height="100" width="164" />
-        <h1>OpenKeyval</h1>
+        <h1>OpenKeyval 1.1 (w/SSL)</h1>
         <p> OpenKeyval is a completely open key-value data store, exposed as a drop-dead
         simple web service. The goal is to make this a very easy way to persist data in
         web applications.</p>
@@ -110,6 +110,7 @@
       or something else equally obscure.</p>
       <p>You can also provide read-only access to your data by using the read-only key
       that is returned with each value that you save.</p>
+      <p>We also provide a seperate secure (SSL) version of the service, also free.</p>
 
       <h2>What's the catch?</h2>
       <p>There is no catch. There's no sign up, no payment, no hassles. The only limitation
@@ -214,6 +215,11 @@ window.remoteStorage.getItem('location', ourCallback);</pre>
   }
 });</pre>
 
+      <h2>More Features</h2>
+      <h3>SSL</h3>
+      <p>To use the SSL version of the site, replace all instances of <code>http://api.openkeyval.org</code> with <code>https://secure.openkeyval.org</code>.</p>
+      <p>The data stored on the SSL version is completely seperate from the insecure version, to prevent accidental plaintext transfer of secure data.</p>
+      
       <h2>Open Source</h2>
       <p>The source code for OpenKeyval is <a href="http://github.com/shinyplasticbag/openkeyval">available on github</a>.
       Contributions are welcome: go ahead and <a href="http://github.com/shinyplasticbag/openkeyval#fork_box">fork</a> the code, make some changes, and send a pull request.</p>
@@ -222,6 +228,7 @@ window.remoteStorage.getItem('location', ourCallback);</pre>
       <ul>
         <li><a href="http://github.com/marcuse/pyopenkeyval">pyopenkeyval</a> - a Python interface presented as a dict-like object <i>(Marcus Ekelund)</i></li>
         <li><a href="http://github.com/tomash/flyingv">FlyingV</a> - a Ruby gem for getting and setting values <i>(Tomash)</i></li>
+        <li><a href="http://code.google.com/p/asopenkeyval/">asopenkeyval</a> - Flex/Actionscript library for OpenKeyval <i>(Solomon Wu)</i></li>
       </ul>
 
       <h3>Bugs / Issues</h3>

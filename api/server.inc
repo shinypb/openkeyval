@@ -9,7 +9,7 @@
 
     public static function Dispatch() {
       self::fixMagicQuotesIfNeccessary();
-      
+            
       if ($_SERVER['REQUEST_METHOD'] == 'HEAD') {
         $_SERVER['REQUEST_METHOD'] = 'GET';
         $GLOBALS['WAS_HEAD'] = true;
@@ -42,11 +42,13 @@
         unset($_POST['key']);
       }
 
-      if(strpos($_REQUEST['key'], '.')) {
-        list($key, $command) = explode('.', $_REQUEST['key']);
-      } else {
-        $key = $_REQUEST['key'];
-        $command = '';
+      if (isset($_REQUEST['key'])) {
+        if(strpos($_REQUEST['key'], '.')) {
+          list($key, $command) = explode('.', $_REQUEST['key']);
+        } else {
+          $key = $_REQUEST['key'];
+          $command = '';
+        }
       }
 
       if (strpos($_SERVER['REQUEST_URI'],'/store/')===0) {
@@ -82,7 +84,6 @@
     }
     
     private function throttle($type="read") {
-      OpenKeyval_Storage_Cached::Get($key);
       
       $ip = $_SERVER['REMOTE_ADDR']; 
       
@@ -231,6 +232,7 @@
         400 => 'Bad Request',
         404 => 'Not Found',
         413 => 'Request Entity Too Large',
+        500 => 'Internal Server Error'
       );
       $http_message = $http_status_messages[$http_code];
       header("HTTP/1.0 {$http_code} {$http_message}");
@@ -322,15 +324,16 @@
 
   class OpenKeyval_Storage_Cached extends OpenKeyval_Storage {
     protected static $handle;
-
+    const kCacheVersion = "v1";
+    
     public static function Delete($key) {
       if(!GetMemcacheHandle()) {
         //  Memcache down?
         return parent::Delete($key);
       }
 
-      GetMemcacheHandle()->set($key,null,0);
-      GetMemcacheHandle()->set(OpenKeyval::kReadOnlyKeyPrefix.OpenKeyval::HashForKey($key),null,0);
+      GetMemcacheHandle()->set(self::wrapKeyForMemcache($key),null,0);
+      GetMemcacheHandle()->set(self::wrapKeyForMemcache(OpenKeyval::kReadOnlyKeyPrefix.OpenKeyval::HashForKey($key)),null,0);
       return parent::Delete($key);
     }
 
@@ -340,7 +343,7 @@
         return parent::Get($key);
       }
 
-      if($value = GetMemcacheHandle()->get($key)) {
+      if($value = GetMemcacheHandle()->get(self::wrapKeyForMemcache($key))) {
         $raw_value = unserialize($value);
         if ($raw_value != null) {
           // Not sure why there are NULLs in the cache, but there are.  TODO: Fix root cause.
@@ -350,7 +353,7 @@
 
       //  not in cache
       $value = parent::Get($key);
-      GetMemcacheHandle()->set($key, serialize($value));
+      GetMemcacheHandle()->set(self::wrapKeyForMemcache($key), serialize($value));
 
       return $value;
     }
@@ -365,17 +368,25 @@
 
       $rv = parent::Set($key, $value);
       if($rv) {
-        GetMemcacheHandle()->set($key, serialize($value));
-        GetMemcacheHandle()->set(OpenKeyval::kReadOnlyKeyPrefix . $hash, serialize($value));
+        GetMemcacheHandle()->set(self::wrapKeyForMemcache($key), serialize($value));
+        GetMemcacheHandle()->set(self::wrapKeyForMemcache(OpenKeyval::kReadOnlyKeyPrefix . $hash), serialize($value));
       } else {
         //  weird, set failed
-        GetMemcacheHandle()->set($key,null,0);
-        GetMemcacheHandle()->set(OpenKeyval::kReadOnlyKeyPrefix . $hash,null,0);
+        GetMemcacheHandle()->set(self::wrapKeyForMemcache($key),null,0);
+        GetMemcacheHandle()->set(self::wrapKeyForMemcache(OpenKeyval::kReadOnlyKeyPrefix . $hash),null,0);
       }
       return $rv;
     }
+  
+    private function wrapKeyForMemcache($key) {
+      return $key;
+      $namespace = $GLOBALS['CONFIG']['api_hostname'];
+      return $namespace . kCacheVersion . "-" . $key;
+    }
+        
   }
 
+ 
   function generateRandStr($length){ 
     $randstr = ""; 
     for($i=0; $i<$length; $i++) { 
