@@ -15,6 +15,11 @@
         $GLOBALS['WAS_HEAD'] = true;
       }
 
+      if($_SERVER['HTTP_HOST'] != $GLOBALS['CONFIG']['api_hostname']) {
+        self::Response(400, array('error' => 'Hostname mismatch; perhaps you are mixing SSL and non-SSL hostnames?'));
+        exit;
+      } 
+
       if($_SERVER['REQUEST_METHOD'] == 'GET' && $_SERVER['REQUEST_URI'] == '/') {
         self::Response(400, array('error' => 'no_key_specified'));
         exit;
