@@ -93,7 +93,7 @@
       }
 
       $currentTimeChunk = ceil(time()/60/60)*60*60;
-      $key = 'internal-throttle-' . $ip . '-' . '-' . $type . '-' . $currentTimeChunk;
+      $key = 'internal-throttle-' . $GLOBALS['CONFIG']['api_hostname'] . "-" . $ip . '-' . '-' . $type . '-' . $currentTimeChunk;
       
       $memcache = GetMemcacheHandle();
       
