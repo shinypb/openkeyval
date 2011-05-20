@@ -20,7 +20,7 @@ class Api extends PHPUnit_Framework_TestCase {
   }
     
   public function testSet() {      
-    $url = "http://".$GLOBALS['CONFIG']['api_hostname']."/phpunit-" . self::$random_key;
+    $url = (isset($GLOBALS['CONFIG']['ssl'])?"https://":"http://").$GLOBALS['CONFIG']['api_hostname']."/phpunit-" . self::$random_key;
     $data = self::$browser->getdata($url, array('data'=>self::$random_value));
     $r = json_decode($data);
     $this->assertEquals($r->status,"set");        
@@ -28,7 +28,7 @@ class Api extends PHPUnit_Framework_TestCase {
   }
 
   public function testGet() {      
-    $url = "http://".$GLOBALS['CONFIG']['api_hostname']."/phpunit-" . self::$random_key;
+    $url = (isset($GLOBALS['CONFIG']['ssl'])?"https://":"http://").$GLOBALS['CONFIG']['api_hostname']."/phpunit-" . self::$random_key;
     $data = self::$browser->getdata($url);
     $this->assertEquals($data,self::$random_value);    
     $this->assertContains("Content-Length: ".strlen(self::$random_value),self::$browser->hdr);    
@@ -38,7 +38,7 @@ class Api extends PHPUnit_Framework_TestCase {
   
   public function testMIMEtype() {      
     $type = "application/octet-stream";
-    $url = "http://".$GLOBALS['CONFIG']['api_hostname']."/phpunit-" . self::$random_key . "." . $type;
+    $url = (isset($GLOBALS['CONFIG']['ssl'])?"https://":"http://").$GLOBALS['CONFIG']['api_hostname']."/phpunit-" . self::$random_key . "." . $type;
     $data = self::$browser->getdata($url);
     $this->assertEquals($data,self::$random_value);    
     $this->assertContains("Content-Type: $type",self::$browser->hdr);
@@ -46,7 +46,7 @@ class Api extends PHPUnit_Framework_TestCase {
 
   public function testZeroValue() {      
     # Literal value of "0" should be treated like a valud value (See bug #10).
-    $url = "http://".$GLOBALS['CONFIG']['api_hostname']."/zerome";
+    $url = (isset($GLOBALS['CONFIG']['ssl'])?"https://":"http://").$GLOBALS['CONFIG']['api_hostname']."/zerome";
     # set
     $data = self::$browser->getdata($url, array('data'=>"0"));
     # get
@@ -55,7 +55,7 @@ class Api extends PHPUnit_Framework_TestCase {
   }  
 
   public function testDelete() {      
-    $url = "http://".$GLOBALS['CONFIG']['api_hostname']."/deleteme";
+    $url = (isset($GLOBALS['CONFIG']['ssl'])?"https://":"http://").$GLOBALS['CONFIG']['api_hostname']."/deleteme";
     $data = self::$browser->getdata($url, array('data'=>"smiles"));
     $data = self::$browser->getdata($url);
     $this->assertEquals($data,"smiles"); 
@@ -76,7 +76,7 @@ class Api extends PHPUnit_Framework_TestCase {
     
     $post = array($random_key1=>$random_value1,$random_key2=>$random_value2);
     
-    $url = "http://".$GLOBALS['CONFIG']['api_hostname']."/";
+    $url = (isset($GLOBALS['CONFIG']['ssl'])?"https://":"http://").$GLOBALS['CONFIG']['api_hostname']."/";
     $data = self::$browser->getdata($url, $post);
     $r = json_decode($data);
     $this->assertEquals($r->status,"multiset");        
@@ -89,7 +89,7 @@ class Api extends PHPUnit_Framework_TestCase {
     $huge_random_value = generateRandStr(65535);
     
     # set
-    $url = "http://".$GLOBALS['CONFIG']['api_hostname']."/" . $huge_random_key;
+    $url = (isset($GLOBALS['CONFIG']['ssl'])?"https://":"http://").$GLOBALS['CONFIG']['api_hostname']."/" . $huge_random_key;
     $data = self::$browser->getdata($url, array('data' => $huge_random_value) );
     $r = json_decode($data);
     $this->assertEquals($r->status,"set");        
@@ -106,19 +106,19 @@ class Api extends PHPUnit_Framework_TestCase {
     $small_value = generateRandStr(10);
     $oversize_value = generateRandStr(65537);
     
-    $url = "http://".$GLOBALS['CONFIG']['api_hostname']."/" . $small_key;
+    $url = (isset($GLOBALS['CONFIG']['ssl'])?"https://":"http://").$GLOBALS['CONFIG']['api_hostname']."/" . $small_key;
     $data = self::$browser->getdata($url, array('data' => $oversize_value) );
     $r = json_decode($data);
     $this->assertContains("data too big",$r->error);    
 
-    $url = "http://".$GLOBALS['CONFIG']['api_hostname']."/" . $oversize_key;
+    $url = (isset($GLOBALS['CONFIG']['ssl'])?"https://":"http://").$GLOBALS['CONFIG']['api_hostname']."/" . $oversize_key;
     $data = self::$browser->getdata($url, array('data' => $small_value) );
     $r = json_decode($data);
     $this->assertContains("invalid_key",$r->error);    
 }
 
   public function testNoKey() {      
-    $url = "http://".$GLOBALS['CONFIG']['api_hostname']."/";
+    $url = (isset($GLOBALS['CONFIG']['ssl'])?"https://":"http://").$GLOBALS['CONFIG']['api_hostname']."/";
     $data = self::$browser->getdata($url);
     $r = json_decode($data);
     $this->assertEquals($r->error,"no_key_specified");        
@@ -127,7 +127,7 @@ class Api extends PHPUnit_Framework_TestCase {
   public function testInvalidKey() {      
     # test a bunch with GET
     foreach (array("bad","invalid!","rok-foobar","bad keys are bad","jack+jill")as $key) {
-      $url = "http://".$GLOBALS['CONFIG']['api_hostname']."/".$key;
+      $url = (isset($GLOBALS['CONFIG']['ssl'])?"https://":"http://").$GLOBALS['CONFIG']['api_hostname']."/".$key;
       $data = self::$browser->getdata($url);
       $r = json_decode($data);
       $this->assertEquals($r->error,"invalid_key");        
@@ -135,7 +135,7 @@ class Api extends PHPUnit_Framework_TestCase {
     
     # try to sneak one bad one in a multi-set POST
     $post = array("goodkey"=>"joy","bad"=>"not joy");
-    $url = "http://".$GLOBALS['CONFIG']['api_hostname']."/";
+    $url = (isset($GLOBALS['CONFIG']['ssl'])?"https://":"http://").$GLOBALS['CONFIG']['api_hostname']."/";
     $data = self::$browser->getdata($url, $post);
     $r = json_decode($data);
     $this->assertEquals($r->error,"invalid_key");
@@ -143,7 +143,7 @@ class Api extends PHPUnit_Framework_TestCase {
   }
 
   public function testKeyInfo() {      
-    $url = "http://".$GLOBALS['CONFIG']['api_hostname']."/phpunit-" . self::$random_key . "?key_info";
+    $url = (isset($GLOBALS['CONFIG']['ssl'])?"https://":"http://").$GLOBALS['CONFIG']['api_hostname']."/phpunit-" . self::$random_key . "?key_info";
     $data = self::$browser->getdata($url);
     $r = json_decode($data);
     $this->assertEquals('phpunit-'.self::$random_key,$r->key);
@@ -151,14 +151,18 @@ class Api extends PHPUnit_Framework_TestCase {
 
   public function testHEAD() {      
     $url = "/phpunit-" . self::$random_key;
-    $portno = 80;
+    if (isset($GLOBALS['CONFIG']['ssl'])) {
+      $portno = 443;
+    } else {
+      $portno = 80;
+    }
     $method = "HEAD";
     $http_response = "";
     $http_request = $method." ".$url ." HTTP/1.1\r\n";
     $http_request .= "Host: ".$GLOBALS['CONFIG']['api_hostname']."\r\n";
     $http_request .= "\r\n";
 
-    $fp = fsockopen($GLOBALS['CONFIG']['api_hostname'], $portno, $errno, $errstr);
+    $fp = fsockopen((isset($GLOBALS['CONFIG']['ssl'])?"ssl://":"").$GLOBALS['CONFIG']['api_hostname'], $portno, $errno, $errstr);
     if($fp){
         fputs($fp, $http_request);
         while (!feof($fp)) $http_response .= fgets($fp, 128);
