@@ -9,7 +9,7 @@
 
     public static function Dispatch() {
       self::fixMagicQuotesIfNeccessary();
-            
+
       if ($_SERVER['REQUEST_METHOD'] == 'HEAD') {
         $_SERVER['REQUEST_METHOD'] = 'GET';
         $GLOBALS['WAS_HEAD'] = true;
@@ -18,7 +18,7 @@
       if($_SERVER['HTTP_HOST'] != $GLOBALS['CONFIG']['api_hostname']) {
         self::Response(400, array('error' => 'Hostname mismatch; perhaps you are mixing SSL and non-SSL hostnames?'));
         exit;
-      } 
+      }
 
       if($_SERVER['REQUEST_METHOD'] == 'GET' && $_SERVER['REQUEST_URI'] == '/') {
         self::Response(400, array('error' => 'no_key_specified'));
@@ -87,37 +87,38 @@
         self::Response(200, array('status' => 'set', 'key' => $key, 'read_only_key' => self::ReadOnlyKey($key)));
       }
     }
-    
+
     private function throttle($type="read") {
-      
-      $ip = $_SERVER['REMOTE_ADDR']; 
-      
+
+      $ip = $_SERVER['REMOTE_ADDR'];
+
       # Dirty hack for time being
-      if ($ip == "184.72.10.139") {
+      if ($ip == "184.72.10.139" || $ip == "121.98.218.129") {
+        //  121.98.218.129 = Nick Coughlin, working on a project for 10k.aneventapart.com
         return;
       }
 
       $currentTimeChunk = ceil(time()/60/60)*60*60;
       $key = 'internal-throttle-' . $GLOBALS['CONFIG']['api_hostname'] . "-" . $ip . '-' . '-' . $type . '-' . $currentTimeChunk;
-      
+
       $memcache = GetMemcacheHandle();
-      
+
       $currentLimit = $memcache->get($key)*1;
-      
+
       if ($type == "read") {
         $maxLimit = 1000;
       } else {
         $maxLimit = 100;
-      }        
+      }
 
       $expire = $currentTimeChunk-time();
-            
+
       $memcache->set($key,$currentLimit+1,false,$expire);
 
       if ($currentLimit>$maxLimit) {
         self::Response(400, array('error' => 'API usage limit exceeded; exceeded hourly quota','throttleType'=>$type,'requestsInPeriodSoFar'=>$currentLimit,'quota'=>$maxLimit,'periodCountdown'=>$expire));
-      } 
-      
+      }
+
     }
 
     private function fixMagicQuotesIfNeccessary() {
@@ -148,7 +149,7 @@
       $key_map = array();
       foreach ($_GET as $key=>$value) {
         if ($key != self::determineJSONPCallback()) {
-          self::throttle("write");        
+          self::throttle("write");
           self::HandlePOST($key, $value);
           $key_map[$key] = self::ReadOnlyKey($key);
         }
@@ -330,7 +331,7 @@
   class OpenKeyval_Storage_Cached extends OpenKeyval_Storage {
     protected static $handle;
     const kCacheVersion = "v1";
-    
+
     public static function Delete($key) {
       if(!GetMemcacheHandle()) {
         //  Memcache down?
@@ -382,29 +383,29 @@
       }
       return $rv;
     }
-  
+
     private function wrapKeyForMemcache($key) {
       $namespace = $GLOBALS['CONFIG']['api_hostname'];
       return $namespace . kCacheVersion . "-" . $key;
     }
-        
+
   }
 
- 
-  function generateRandStr($length){ 
-    $randstr = ""; 
-    for($i=0; $i<$length; $i++) { 
-       $randnum = mt_rand(0,61); 
-       if($randnum < 10) { 
-          $randstr .= chr($randnum+48); 
-       } else if($randnum < 36) { 
-          $randstr .= chr($randnum+55); 
-       } else { 
-          $randstr .= chr($randnum+61); 
+
+  function generateRandStr($length){
+    $randstr = "";
+    for($i=0; $i<$length; $i++) {
+       $randnum = mt_rand(0,61);
+       if($randnum < 10) {
+          $randstr .= chr($randnum+48);
+       } else if($randnum < 36) {
+          $randstr .= chr($randnum+55);
+       } else {
+          $randstr .= chr($randnum+61);
        }
     }
-    return $randstr; 
-  } 
+    return $randstr;
+  }
 
   function GetMemcacheHandle() {
     static $handle;
@@ -417,5 +418,5 @@
     }
     return $handle;
   }
-    
+
 ?>
