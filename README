@@ -1,9 +1,12 @@
 OpenKeyval
 ==========
 
+* The live version of the service has been sunset.  
+* This codebase is no longer being maintained by the creators.  
+
 Overview
 --------
-OpenKeyval is a persistent key/value store, presented as a simple web service. OpenKeyval.org provides everyone with free, unauthenticated access to its server. Anyone can write up to 64 KiB of data to any key. After writing a value, a read-only version of the key is returned, which allows you to safely provide read-only access to data without worrying that the other person might change its value.
+OpenKeyval is a persistent key/value store, presented as a simple web service. OpenKeyval provides everyone with free, unauthenticated access to its server. Anyone can write up to 64 KiB of data to any key. After writing a value, a read-only version of the key is returned, which allows you to safely provide read-only access to data without worrying that the other person might change its value.
 
 OpenKeyval requires no authentication and provides absolutely no guarantees of privacy. The key to the entire system is obscurity; suitably obscure keys are unlikely to be guessed by other users, and therefore safe. Read-only keys allow you to delegate access to other users without worrying about them making changes.
 
